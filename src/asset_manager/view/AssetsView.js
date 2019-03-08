@@ -12,11 +12,9 @@ module.exports = Backbone.View.extend({
     const pfx = view.pfx;
     const ppfx = view.ppfx;
 
-    if (view.config.useCustomAssetsTemplate !== '') {
-      return view.config.useCustomAssetsTemplate;
-    }
-
-    return `
+    return (
+      view.config.useCustomAssetsTemplate ||
+      `
     <div class="${pfx}assets-cont">
       <div class="${pfx}assets-header">
         <form class="${pfx}add-asset">
@@ -30,7 +28,8 @@ module.exports = Backbone.View.extend({
       <div class="${pfx}assets" data-el="assets"></div>
       <div style="clear:both"></div>
     </div>
-    `;
+    `
+    );
   },
 
   initialize(o) {
