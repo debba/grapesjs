@@ -284,7 +284,19 @@ module.exports = Backbone.View.extend({
     var result;
     var model = this.model;
     var target = this.getTargetModel();
+
+    const properStrategy = this.model.get('useOwnStrategy');
+    const em = this.em;
+    const property = model.get('property');
+
     var customFetchValue = this.customValue;
+
+    if (!isUndefined(properStrategy) && properStrategy) {
+      target.trigger('ownStyleFetch:property', property, model);
+      em.trigger(`ownStyleFetch:property:${property}`, model);
+      em.trigger(`ownStyleFetch:property`, property, model);
+      target = model.get('newTarget');
+    }
 
     if (!target) {
       return result;
@@ -387,6 +399,8 @@ module.exports = Backbone.View.extend({
    */
   updateTargetStyle(value, name = '', opts = {}) {
     const property = name || this.model.get('property');
+    const properStrategy = this.model.get('useOwnStrategy');
+    const em = this.em;
     const target = this.getTarget();
     const style = target.getStyle();
 
@@ -396,7 +410,13 @@ module.exports = Backbone.View.extend({
       delete style[property];
     }
 
-    target.setStyle(style, opts);
+    if (!isUndefined(properStrategy) && properStrategy) {
+      target.trigger('ownStyleUpdate:property', property, value);
+      em.trigger(`ownStyleUpdate:property:${property}`, value, target);
+      em.trigger(`ownStyleUpdate:property`, property, value, target);
+    } else {
+      target.setStyle(style, opts);
+    }
 
     // Helper is used by `states` like ':hover' to show its preview
     const helper = this.getHelperModel();

@@ -34,7 +34,6 @@ export default {
     if (isString(prop)) {
       prop = parseStyle(prop);
     }
-
     const propOrig = this.getStyle();
     const propNew = { ...prop };
     this.set('style', propNew, opts);
