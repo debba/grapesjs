@@ -22380,7 +22380,15 @@ module.exports = {
   modalTitle: 'Select Image',
 
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg'
+  inputPlaceholder: 'http://path/to/the/image.jpg',
+
+  // Template for using a custom assets template
+  useCustomAssetsTemplate: '',
+
+  // Hide File uploader, it could be useful to render a file upload button block
+  // in custom assets template and keeping upload logic using html elements in
+  // FileUploader view
+  hideFileUploader: 0
 };
 
 /***/ }),
@@ -22646,6 +22654,19 @@ module.exports = function () {
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
+    },
+
+
+    /**
+     *  Get assets element container
+     * @param {string} template
+     * @param {boolean} hideFileUploader
+     */
+    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
+      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (template !== '') c.useCustomAssetsTemplate = template;
+      c.hideFileUploader = hideFileUploader;
     },
 
 
@@ -23061,7 +23082,8 @@ module.exports = _backbone2.default.View.extend({
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-    return '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
+
+    return view.config.useCustomAssetsTemplate || '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -23221,6 +23243,9 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
+
+    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
+
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = this.ppfx + 'asset-manager';
     this.renderAssets();
@@ -24555,36 +24580,6 @@ module.exports = {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /**
-                                                                                                                                                                                                                                                                   * You can customize the initial state of the module from the editor initialization, by passing the following [Configuration Object](https://github.com/artf/grapesjs/blob/master/src/canvas/config/config.js)
-                                                                                                                                                                                                                                                                   * ```js
-                                                                                                                                                                                                                                                                   * const editor = grapesjs.init({
-                                                                                                                                                                                                                                                                   *  canvas: {
-                                                                                                                                                                                                                                                                   *    // options
-                                                                                                                                                                                                                                                                   *  }
-                                                                                                                                                                                                                                                                   * })
-                                                                                                                                                                                                                                                                   * ```
-                                                                                                                                                                                                                                                                   *
-                                                                                                                                                                                                                                                                   * Once the editor is instantiated you can use its API. Before using these methods you should get the module from the instance
-                                                                                                                                                                                                                                                                   *
-                                                                                                                                                                                                                                                                   * ```js
-                                                                                                                                                                                                                                                                   * const canvas = editor.Canvas;
-                                                                                                                                                                                                                                                                   * ```
-                                                                                                                                                                                                                                                                   *
-                                                                                                                                                                                                                                                                   * * [getConfig](#getconfig)
-                                                                                                                                                                                                                                                                   * * [getElement](#getelement)
-                                                                                                                                                                                                                                                                   * * [getFrameEl](#getframeel)
-                                                                                                                                                                                                                                                                   * * [getWindow](#getwindow)
-                                                                                                                                                                                                                                                                   * * [getDocument](#getdocument)
-                                                                                                                                                                                                                                                                   * * [getBody](#getbody)
-                                                                                                                                                                                                                                                                   * * [getWrapperEl](#getwrapperel)
-                                                                                                                                                                                                                                                                   * * [setCustomBadgeLabel](#setcustombadgelabel)
-                                                                                                                                                                                                                                                                   * * [hasFocus](#hasfocus)
-                                                                                                                                                                                                                                                                   * * [scrollTo](#scrollto)
-                                                                                                                                                                                                                                                                   *
-                                                                                                                                                                                                                                                                   * @module Canvas
-                                                                                                                                                                                                                                                                   */
-
 var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
 var _Droppable = __webpack_require__(/*! utils/Droppable */ "./src/utils/Droppable.js");
@@ -24593,7 +24588,35 @@ var _Droppable2 = _interopRequireDefault(_Droppable);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
+                                                                                                                                                                                                     * You can customize the initial state of the module from the editor initialization, by passing the following [Configuration Object](https://github.com/artf/grapesjs/blob/master/src/canvas/config/config.js)
+                                                                                                                                                                                                     * ```js
+                                                                                                                                                                                                     * const editor = grapesjs.init({
+                                                                                                                                                                                                     *  canvas: {
+                                                                                                                                                                                                     *    // options
+                                                                                                                                                                                                     *  }
+                                                                                                                                                                                                     * })
+                                                                                                                                                                                                     * ```
+                                                                                                                                                                                                     *
+                                                                                                                                                                                                     * Once the editor is instantiated you can use its API. Before using these methods you should get the module from the instance
+                                                                                                                                                                                                     *
+                                                                                                                                                                                                     * ```js
+                                                                                                                                                                                                     * const canvas = editor.Canvas;
+                                                                                                                                                                                                     * ```
+                                                                                                                                                                                                     *
+                                                                                                                                                                                                     * * [getConfig](#getconfig)
+                                                                                                                                                                                                     * * [getElement](#getelement)
+                                                                                                                                                                                                     * * [getFrameEl](#getframeel)
+                                                                                                                                                                                                     * * [getWindow](#getwindow)
+                                                                                                                                                                                                     * * [getDocument](#getdocument)
+                                                                                                                                                                                                     * * [getBody](#getbody)
+                                                                                                                                                                                                     * * [getWrapperEl](#getwrapperel)
+                                                                                                                                                                                                     * * [setCustomBadgeLabel](#setcustombadgelabel)
+                                                                                                                                                                                                     * * [hasFocus](#hasfocus)
+                                                                                                                                                                                                     * * [scrollTo](#scrollto)
+                                                                                                                                                                                                     *
+                                                                                                                                                                                                     * @module Canvas
+                                                                                                                                                                                                     */
 
 var _window = window,
     requestAnimationFrame = _window.requestAnimationFrame;
@@ -24629,12 +24652,12 @@ module.exports = function () {
      * @param {Object} config Configurations
      * @private
      */
-    init: function init() {
-      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    init: function init(config) {
+      c = config || {};
+      for (var name in defaults) {
+        if (!(name in c)) c[name] = defaults[name];
+      }
 
-      c = _extends({}, defaults, config);
-
-      this.em = c.em;
       var ppfx = c.pStylePrefix;
       if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
@@ -24880,17 +24903,6 @@ module.exports = function () {
 
 
     /**
-     * Returns element's offsets like margins and paddings
-     * @param {HTMLElement} el
-     * @return {Object}
-     * @private
-     */
-    getElementOffsets: function getElementOffsets(el) {
-      return CanvasView.getElementOffsets(el);
-    },
-
-
-    /**
      * This method comes handy when you need to attach something like toolbars
      * to elements inside the canvas, dealing with all relative position,
      * offsets, etc. and returning as result the object with positions which are
@@ -24982,20 +24994,22 @@ module.exports = function () {
 
     /**
      * X and Y mouse position relative to the canvas
-     * @param {Event} ev
+     * @param {Event} e
      * @return {Object}
      * @private
      */
-    getMouseRelativeCanvas: function getMouseRelativeCanvas(ev) {
-      var zoom = this.em.getZoomDecimal();
-
-      var _CanvasView$getPositi = CanvasView.getPosition(),
-          top = _CanvasView$getPositi.top,
-          left = _CanvasView$getPositi.left;
+    getMouseRelativeCanvas: function getMouseRelativeCanvas(e, options) {
+      var opts = options || {};
+      var frame = this.getFrameEl();
+      var body = this.getBody();
+      var addTop = frame.offsetTop || 0;
+      var addLeft = frame.offsetLeft || 0;
+      var yOffset = body.scrollTop || 0;
+      var xOffset = body.scrollLeft || 0;
 
       return {
-        y: ev.clientY * zoom + top,
-        x: ev.clientX * zoom + left
+        y: e.clientY + addTop + yOffset,
+        x: e.clientX + addLeft + xOffset
       };
     },
 
@@ -25073,7 +25087,7 @@ module.exports = function () {
     },
     updateClientY: function updateClientY(ev) {
       ev.preventDefault();
-      this.lastClientY = (0, _mixins.getPointerEvent)(ev).clientY * this.em.getZoomDecimal();
+      this.lastClientY = (0, _mixins.getPointerEvent)(ev).clientY;
     },
 
 
@@ -25114,19 +25128,10 @@ module.exports = function () {
       (0, _mixins.off)(toListen, 'mouseup', this.stopAutoscroll);
     },
     getScrollListeners: function getScrollListeners() {
-      return [this.getFrameEl().contentWindow];
+      return [this.getFrameEl().contentWindow, this.getElement()];
     },
     postRender: function postRender() {
       if ((0, _mixins.hasDnd)(c.em)) this.droppable = new _Droppable2.default(c.em);
-    },
-    setZoom: function setZoom(value) {
-      return canvas.set('zoom', parseFloat(value));
-    },
-    getZoom: function getZoom() {
-      return parseFloat(canvas.get('zoom'));
-    },
-    getZoomDecimal: function getZoomDecimal() {
-      return this.getZoom() / 100;
     },
 
 
@@ -25166,19 +25171,12 @@ module.exports = _backbone2.default.Model.extend({
   defaults: {
     frame: '',
     wrapper: '',
-    rulers: false,
-    zoom: 100,
-    x: 0,
-    y: 0
+    rulers: false
   },
 
-  initialize: function initialize() {
-    this.set('frame', new Frame());
-    this.listenTo(this, 'change:zoom', this.onZoomChange);
-  },
-  onZoomChange: function onZoomChange() {
-    var zoom = this.get('zoom');
-    zoom < 1 && this.set('zoom', 1);
+  initialize: function initialize(config) {
+    var conf = this.conf || {};
+    this.set('frame', new Frame(conf.frame));
   }
 });
 
@@ -25231,92 +25229,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var FrameView = __webpack_require__(/*! ./FrameView */ "./src/canvas/view/FrameView.js");
 var $ = _backbone2.default.$;
-var timerZoom = void 0;
 
 module.exports = _backbone2.default.View.extend({
-  events: {
-    wheel: 'onWheel'
-  },
-
-  template: function template() {
-    var pfx = this.pfx;
-
-    return '\n      <div class="' + pfx + 'canvas__frames" data-frames></div>\n      <div id="' + pfx + 'tools" class="' + pfx + 'canvas__tools" data-tools></div>\n    ';
-  },
   initialize: function initialize(o) {
-    _.bindAll(this, 'renderBody', 'onFrameScroll', 'clearOff', 'onKeyPress');
+    _.bindAll(this, 'renderBody', 'onFrameScroll', 'clearOff');
     (0, _mixins.on)(window, 'scroll resize', this.clearOff);
-    var model = this.model;
-
     this.config = o.config || {};
     this.em = this.config.em || {};
-    this.pfx = this.config.stylePrefix || '';
     this.ppfx = this.config.pStylePrefix || '';
     this.className = this.config.stylePrefix + 'canvas';
     this.listenTo(this.em, 'change:canvasOffset', this.clearOff);
-    this.listenTo(model, 'change:zoom change:x change:y', this.updateFrames);
-    this.toggleListeners(1);
     this.frame = new FrameView({
       model: this.model.get('frame'),
       config: this.config
     });
-  },
-  remove: function remove() {
-    _backbone2.default.View.prototype.remove.apply(this, arguments);
-    this.toggleListeners();
-  },
-  preventDefault: function preventDefault(ev) {
-    if (ev) {
-      ev.preventDefault();
-      ev._parentEvent && ev._parentEvent.preventDefault();
-    }
-  },
-  toggleListeners: function toggleListeners(enable) {
-    var method = enable ? 'on' : 'off';
-    var methods = { on: _mixins.on, off: _mixins.off };
-    methods[method](document, 'keypress', this.onKeyPress);
-  },
-  onKeyPress: function onKeyPress(ev) {
-    var em = this.em;
-
-    var key = (0, _mixins.getKeyChar)(ev);
-
-    if (key === ' ' && em.getZoomDecimal() !== 1) {
-      this.preventDefault(ev);
-      em.get('Editor').runCommand('core:canvas-move');
-    }
-  },
-  onWheel: function onWheel(ev) {
-    if ((ev.ctrlKey || ev.metaKey) && this.em.getConfig('multiFrames')) {
-      this.preventDefault(ev);
-      var model = this.model;
-
-      var delta = Math.max(-1, Math.min(1, ev.wheelDelta || -ev.detail));
-      var zoom = model.get('zoom');
-      model.set('zoom', zoom + delta * 2);
-    }
-  },
-  updateFrames: function updateFrames() {
-    var em = this.em,
-        model = this.model;
-    var _model$attributes = model.attributes,
-        x = _model$attributes.x,
-        y = _model$attributes.y;
-
-    var zoom = this.getZoom();
-    var defOpts = { preserveSelected: 1 };
-    var mpl = zoom ? 1 / zoom : 1;
-    this.framesArea.style.transform = 'scale(' + zoom + ') translate(' + x * mpl + 'px, ' + y * mpl + 'px)';
-    this.clearOff();
-    this.onFrameScroll();
-    em.stopDefault(defOpts);
-    timerZoom && clearTimeout(timerZoom);
-    timerZoom = setTimeout(function () {
-      return em.runDefault(defOpts);
-    });
-  },
-  getZoom: function getZoom() {
-    return this.em.getZoomDecimal();
   },
 
 
@@ -25341,9 +25267,8 @@ module.exports = _backbone2.default.View.extend({
   onFrameScroll: function onFrameScroll() {
     var u = 'px';
     var body = this.frame.el.contentDocument.body;
-    var zoom = this.getZoom();
-    this.toolsEl.style.top = '-' + body.scrollTop * zoom + u;
-    this.toolsEl.style.left = '-' + body.scrollLeft * zoom + u;
+    this.toolsEl.style.top = '-' + body.scrollTop + u;
+    this.toolsEl.style.left = '-' + body.scrollLeft + u;
     this.em.trigger('canvasScroll');
   },
 
@@ -25382,8 +25307,6 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   renderBody: function renderBody() {
-    var _this = this;
-
     var config = this.config,
         model = this.model;
 
@@ -25444,7 +25367,6 @@ module.exports = _backbone2.default.View.extend({
           oEvent.initEvent(e.type, true, true);
         }
         oEvent.keyCodeVal = e.keyCode;
-        oEvent._parentEvent = e;
         ['keyCode', 'which'].forEach(function (prop) {
           Object.defineProperty(oEvent, prop, {
             get: function get() {
@@ -25455,10 +25377,12 @@ module.exports = _backbone2.default.View.extend({
         return oEvent;
       };
 
-      [{ event: 'keydown keyup keypress', class: 'KeyboardEvent' }, { event: 'wheel', class: 'WheelEvent' }].forEach(function (obj) {
+      [{ event: 'keydown keyup', class: 'KeyboardEvent'
+        //{ event: 'mousedown mousemove mouseup', class: 'MouseEvent' },
+      }].forEach(function (obj) {
         return obj.event.split(' ').forEach(function (event) {
           fdoc.addEventListener(event, function (e) {
-            return _this.el.dispatchEvent(createCustomEvent(e, obj.class));
+            return doc.dispatchEvent(createCustomEvent(e, obj.class));
           });
         });
       });
@@ -25524,7 +25448,6 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   getElementPos: function getElementPos(el, opts) {
-    var zoom = this.getZoom();
     var opt = opts || {};
     var frmOff = this.getFrameOffset();
     var cvsOff = this.getCanvasOffset();
@@ -25533,31 +25456,13 @@ module.exports = _backbone2.default.View.extend({
     var frmTop = opt.avoidFrameOffset ? 0 : frmOff.top;
     var frmLeft = opt.avoidFrameOffset ? 0 : frmOff.left;
 
-    var top = eo.top * zoom + frmTop - cvsOff.top;
-    var left = eo.left * zoom + frmLeft - cvsOff.left;
-    var height = eo.height * zoom;
-    var width = eo.width * zoom;
+    var top = eo.top + frmTop - cvsOff.top;
+    var left = eo.left + frmLeft - cvsOff.left;
+    // clientHeight/clientWidth are for SVGs
+    var height = el.offsetHeight || el.clientHeight;
+    var width = el.offsetWidth || el.clientWidth;
 
     return { top: top, left: left, height: height, width: width };
-  },
-
-
-  /**
-   * Returns element's offsets like margins and paddings
-   * @param {HTMLElement} el
-   * @return {Object}
-   * @private
-   */
-  getElementOffsets: function getElementOffsets(el) {
-    var _this2 = this;
-
-    var result = {};
-    var styles = window.getComputedStyle(el);
-    ['marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'].forEach(function (offset) {
-      result[offset] = parseFloat(styles[offset]) * _this2.getZoom();
-    });
-
-    return result;
   },
 
 
@@ -25570,13 +25475,11 @@ module.exports = _backbone2.default.View.extend({
     var doc = this.frame.el.contentDocument;
     if (!doc) return;
     var bEl = doc.body;
-    var zoom = this.getZoom();
     var fo = this.getFrameOffset();
     var co = this.getCanvasOffset();
-
     return {
-      top: fo.top + bEl.scrollTop * zoom - co.top,
-      left: fo.left + bEl.scrollLeft * zoom - co.left
+      top: fo.top + bEl.scrollTop - co.top,
+      left: fo.left + bEl.scrollLeft - co.left
     };
   },
 
@@ -25619,19 +25522,11 @@ module.exports = _backbone2.default.View.extend({
     return this.jsContainer;
   },
   render: function render() {
-    var el = this.el,
-        $el = this.$el,
-        ppfx = this.ppfx,
-        model = this.model;
-
-    this.wrapper = model.get('wrapper');
-    $el.html(this.template());
-    var $frames = $el.find('[data-frames]');
-    this.framesArea = $frames.get(0);
+    this.wrapper = this.model.get('wrapper');
 
     if (this.wrapper && typeof this.wrapper.render == 'function') {
-      model.get('frame').set('wrapper', this.wrapper);
-      $frames.append(this.frame.render().el);
+      this.model.get('frame').set('wrapper', this.wrapper);
+      this.$el.append(this.frame.render().el);
       var frame = this.frame;
       if (this.config.scripts.length === 0) {
         frame.el.onload = this.renderBody;
@@ -25639,7 +25534,9 @@ module.exports = _backbone2.default.View.extend({
         this.renderScripts(); // will call renderBody later
       }
     }
-    $el.find('[data-tools]').append('\n      <div id="' + ppfx + 'tools" style="pointer-events:none">\n        <div class="' + ppfx + 'highlighter"></div>\n        <div class="' + ppfx + 'badge"></div>\n        <div class="' + ppfx + 'placeholder">\n          <div class="' + ppfx + 'placeholder-int"></div>\n        </div>\n        <div class="' + ppfx + 'ghost"></div>\n        <div class="' + ppfx + 'toolbar" style="pointer-events:all"></div>\n        <div class="' + ppfx + 'resizer"></div>\n        <div class="' + ppfx + 'offset-v"></div>\n        <div class="' + ppfx + 'offset-fixed-v"></div>\n      </div>\n    ');
+    var ppfx = this.ppfx;
+    this.$el.append('\n      <div id="' + ppfx + 'tools" style="pointer-events:none">\n        <div class="' + ppfx + 'highlighter"></div>\n        <div class="' + ppfx + 'badge"></div>\n        <div class="' + ppfx + 'placeholder">\n          <div class="' + ppfx + 'placeholder-int"></div>\n        </div>\n        <div class="' + ppfx + 'ghost"></div>\n        <div class="' + ppfx + 'toolbar" style="pointer-events:all"></div>\n        <div class="' + ppfx + 'resizer"></div>\n        <div class="' + ppfx + 'offset-v"></div>\n        <div class="' + ppfx + 'offset-fixed-v"></div>\n      </div>\n    ');
+    var el = this.el;
     var toolsEl = el.querySelector('#' + ppfx + 'tools');
     this.hlEl = el.querySelector('.' + ppfx + 'highlighter');
     this.badgeEl = el.querySelector('.' + ppfx + 'badge');
@@ -26637,7 +26534,10 @@ module.exports = function () {
       defaultCommands['select-comp'] = __webpack_require__(/*! ./view/SelectComponent */ "./src/commands/view/SelectComponent.js");
       defaultCommands['create-comp'] = __webpack_require__(/*! ./view/CreateComponent */ "./src/commands/view/CreateComponent.js");
       defaultCommands['delete-comp'] = __webpack_require__(/*! ./view/DeleteComponent */ "./src/commands/view/DeleteComponent.js");
+      defaultCommands['image-comp'] = __webpack_require__(/*! ./view/ImageComponent */ "./src/commands/view/ImageComponent.js");
       defaultCommands['move-comp'] = __webpack_require__(/*! ./view/MoveComponent */ "./src/commands/view/MoveComponent.js");
+      defaultCommands['text-comp'] = __webpack_require__(/*! ./view/TextComponent */ "./src/commands/view/TextComponent.js");
+      defaultCommands['insert-custom'] = __webpack_require__(/*! ./view/InsertCustom */ "./src/commands/view/InsertCustom.js");
       defaultCommands['export-template'] = ViewCode;
       defaultCommands['sw-visibility'] = __webpack_require__(/*! ./view/SwitchVisibility */ "./src/commands/view/SwitchVisibility.js");
       defaultCommands['open-layers'] = __webpack_require__(/*! ./view/OpenLayers */ "./src/commands/view/OpenLayers.js");
@@ -26749,8 +26649,8 @@ module.exports = function () {
       defaultCommands['core:redo'] = function (e) {
         return e.UndoManager.redo();
       };
-      [['copy', 'CopyComponent'], ['paste', 'PasteComponent'], ['canvas-move', 'CanvasMove'], ['component-next', 'ComponentNext'], ['component-prev', 'ComponentPrev'], ['component-enter', 'ComponentEnter'], ['component-exit', 'ComponentExit'], ['canvas-clear', 'CanvasClear'], ['component-delete', 'ComponentDelete'], ['component-style-clear', 'ComponentStyleClear']].forEach(function (item) {
-        return defaultCommands['core:' + item[0]] = __webpack_require__("./src/commands/view sync recursive ^\\.\\/.*$")("./" + item[1]);
+      [['copy', 'CopyComponent'], ['paste', 'PasteComponent'], ['component-next', 'ComponentNext'], ['component-prev', 'ComponentPrev'], ['component-enter', 'ComponentEnter'], ['component-exit', 'ComponentExit'], ['canvas-clear', 'CanvasClear'], ['component-delete', 'ComponentDelete'], ['component-style-clear', 'ComponentStyleClear']].forEach(function (item) {
+        return defaultCommands['core:' + item[0]] = __webpack_require__("./src/commands/view sync recursive ^\\.\\/.*$")("./" + item[1]).run;
       });
 
       if (c.em) c.model = c.em.get('Canvas');
@@ -26792,11 +26692,9 @@ module.exports = function () {
     get: function get(id) {
       var el = commands[id];
 
-      if ((0, _underscore.isFunction)(el)) {
+      if (typeof el == 'function') {
         el = new el(c);
         commands[id] = el;
-      } else if (!el) {
-        em.logWarning('\'' + id + '\' command not found');
       }
 
       return el;
@@ -26913,12 +26811,10 @@ module.exports = function () {
       if (command && command.run) {
         var id = command.id;
         var _editor = em.get('Editor');
+        result = command.callRun(_editor, options);
 
-        if (!this.isActive(id) || options.force) {
-          if (id && command.stop && !command.noStop) {
-            active[id] = result;
-          }
-          result = command.callRun(_editor, options);
+        if (id && command.stop && !command.noStop) {
+          active[id] = result;
         }
       }
 
@@ -26927,7 +26823,7 @@ module.exports = function () {
 
 
     /**
-     * Stop the command
+     * [runCommand description]
      * @param  {Object} command
      * @param {Object} options
      * @return {*} Result of the command
@@ -26941,11 +26837,8 @@ module.exports = function () {
       if (command && command.run) {
         var id = command.id;
         var _editor2 = em.get('Editor');
-
-        if (this.isActive(id) || options.force) {
-          if (id) delete active[id];
-          result = command.callStop(_editor2, options);
-        }
+        result = command.callStop(_editor2, options);
+        if (id) delete active[id];
       }
 
       return result;
@@ -26977,8 +26870,6 @@ module.exports = function () {
 var map = {
 	"./CanvasClear": "./src/commands/view/CanvasClear.js",
 	"./CanvasClear.js": "./src/commands/view/CanvasClear.js",
-	"./CanvasMove": "./src/commands/view/CanvasMove.js",
-	"./CanvasMove.js": "./src/commands/view/CanvasMove.js",
 	"./CommandAbstract": "./src/commands/view/CommandAbstract.js",
 	"./CommandAbstract.js": "./src/commands/view/CommandAbstract.js",
 	"./ComponentDelete": "./src/commands/view/ComponentDelete.js",
@@ -27005,6 +26896,10 @@ var map = {
 	"./ExportTemplate.js": "./src/commands/view/ExportTemplate.js",
 	"./Fullscreen": "./src/commands/view/Fullscreen.js",
 	"./Fullscreen.js": "./src/commands/view/Fullscreen.js",
+	"./ImageComponent": "./src/commands/view/ImageComponent.js",
+	"./ImageComponent.js": "./src/commands/view/ImageComponent.js",
+	"./InsertCustom": "./src/commands/view/InsertCustom.js",
+	"./InsertCustom.js": "./src/commands/view/InsertCustom.js",
 	"./MoveComponent": "./src/commands/view/MoveComponent.js",
 	"./MoveComponent.js": "./src/commands/view/MoveComponent.js",
 	"./OpenAssets": "./src/commands/view/OpenAssets.js",
@@ -27032,7 +26927,9 @@ var map = {
 	"./ShowOffset": "./src/commands/view/ShowOffset.js",
 	"./ShowOffset.js": "./src/commands/view/ShowOffset.js",
 	"./SwitchVisibility": "./src/commands/view/SwitchVisibility.js",
-	"./SwitchVisibility.js": "./src/commands/view/SwitchVisibility.js"
+	"./SwitchVisibility.js": "./src/commands/view/SwitchVisibility.js",
+	"./TextComponent": "./src/commands/view/TextComponent.js",
+	"./TextComponent.js": "./src/commands/view/TextComponent.js"
 };
 
 
@@ -27072,105 +26969,6 @@ module.exports = {
   run: function run(ed) {
     ed.DomComponents.clear();
     ed.CssComposer.clear();
-  }
-};
-
-/***/ }),
-
-/***/ "./src/commands/view/CanvasMove.js":
-/*!*****************************************!*\
-  !*** ./src/commands/view/CanvasMove.js ***!
-  \*****************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
-
-var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
-
-var _Dragger = __webpack_require__(/*! utils/Dragger */ "./src/utils/Dragger.js");
-
-var _Dragger2 = _interopRequireDefault(_Dragger);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = {
-  run: function run(ed) {
-    (0, _underscore.bindAll)(this, 'onKeyUp', 'enableDragger', 'disableDragger');
-    this.editor = ed;
-    this.canvasModel = this.canvas.getCanvasView().model;
-    this.toggleMove(1);
-  },
-  stop: function stop(ed) {
-    this.toggleMove();
-    this.disableDragger();
-  },
-  onKeyUp: function onKeyUp(ev) {
-    if ((0, _mixins.getKeyChar)(ev) === ' ') {
-      this.editor.stopCommand(this.id);
-    }
-  },
-  enableDragger: function enableDragger(ev) {
-    this.toggleDragger(1, ev);
-  },
-  disableDragger: function disableDragger(ev) {
-    this.toggleDragger(0, ev);
-  },
-  toggleDragger: function toggleDragger(enable, ev) {
-    var canvasModel = this.canvasModel,
-        em = this.em;
-    var dragger = this.dragger;
-
-    var methodCls = enable ? 'add' : 'remove';
-    this.getCanvas().classList[methodCls](this.ppfx + 'is__grabbing');
-
-    if (!dragger) {
-      dragger = _Dragger2.default.init({
-        getPosition: function getPosition() {
-          return {
-            x: canvasModel.get('x'),
-            y: canvasModel.get('y')
-          };
-        },
-        setPosition: function setPosition(_ref) {
-          var x = _ref.x,
-              y = _ref.y;
-
-          canvasModel.set({ x: x, y: y });
-        },
-        onStart: function onStart(ev, dragger) {
-          em.trigger('canvas:move:start', dragger);
-        },
-        onDrag: function onDrag(ev, dragger) {
-          em.trigger('canvas:move', dragger);
-        },
-        onEnd: function onEnd(ev, dragger) {
-          em.trigger('canvas:move:end', dragger);
-        }
-      });
-      this.dragger = dragger;
-    }
-
-    enable ? dragger.start(ev) : dragger.stop();
-  },
-  toggleMove: function toggleMove(enable) {
-    var ppfx = this.ppfx;
-
-    var methodCls = enable ? 'add' : 'remove';
-    var methodEv = enable ? 'on' : 'off';
-    var methodsEv = { on: _mixins.on, off: _mixins.off };
-    var canvas = this.getCanvas();
-    var classes = [ppfx + 'is__grab'];
-    !enable && classes.push(ppfx + 'is__grabbing');
-    classes.forEach(function (cls) {
-      return canvas.classList[methodCls](cls);
-    });
-    methodsEv[methodEv](document, 'keyup', this.onKeyUp);
-    methodsEv[methodEv](canvas, 'mousedown', this.enableDragger);
-    methodsEv[methodEv](document, 'mouseup', this.disableDragger);
   }
 };
 
@@ -28138,6 +27936,166 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./src/commands/view/ImageComponent.js":
+/*!*********************************************!*\
+  !*** ./src/commands/view/ImageComponent.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+var _underscore2 = _interopRequireDefault(_underscore);
+
+var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+
+var _backbone2 = _interopRequireDefault(_backbone);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var InsertCustom = __webpack_require__(/*! ./InsertCustom */ "./src/commands/view/InsertCustom.js");
+
+module.exports = _underscore2.default.extend({}, InsertCustom, {
+  /**
+   * Trigger before insert
+   * @param   {Object}  object
+   * @private
+   *
+   * */
+  beforeInsert: function beforeInsert(object) {
+    object.type = 'image';
+    object.style = {};
+    object.attributes = {};
+    object.attributes.onmousedown = 'return false';
+    if (this.config.firstCentered && this.getCanvasWrapper() == this.sorter.target) {
+      object.style.margin = '0 auto';
+    }
+  },
+
+
+  /**
+   * Trigger after insert
+   * @param  {Object}  model  Model created after insert
+   * @private
+   * */
+  afterInsert: function afterInsert(model) {
+    model.trigger('dblclick');
+    if (this.sender) this.sender.set('active', false);
+  }
+});
+
+/***/ }),
+
+/***/ "./src/commands/view/InsertCustom.js":
+/*!*******************************************!*\
+  !*** ./src/commands/view/InsertCustom.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+var _underscore2 = _interopRequireDefault(_underscore);
+
+var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+
+var _backbone2 = _interopRequireDefault(_backbone);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var CreateComponent = __webpack_require__(/*! ./CreateComponent */ "./src/commands/view/CreateComponent.js");
+
+module.exports = _underscore2.default.extend({}, CreateComponent, {
+  init: function init() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    CreateComponent.init.apply(this, args);
+    _underscore2.default.bindAll(this, 'insertComponent');
+    this.allowDraw = 0;
+  },
+
+
+  /**
+   * Run method
+   * @private
+   * */
+  run: function run(em, sender, options) {
+    this.em = em;
+    this.sender = sender;
+    this.opt = options || {};
+    this.$wr = this.$wrapper;
+    this.enable();
+  },
+  enable: function enable() {
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    CreateComponent.enable.apply(this, args);
+    this.$wr.on('click', this.insertComponent);
+  },
+
+
+  /**
+   * Start insert event
+   * @private
+   * */
+  insertComponent: function insertComponent() {
+    this.$wr.off('click', this.insertComponent);
+    this.stopSelectPosition();
+    var object = this.buildContent();
+    this.beforeInsert(object);
+    var index = this.sorter.lastPos.index;
+    // By default, collections do not trigger add event, so silent is used
+    var model = this.create(this.sorter.target, object, index, null, {
+      silent: false
+    });
+
+    if (this.opt.terminateAfterInsert && this.sender) this.sender.set('active', false);else this.enable();
+
+    if (!model) return;
+
+    this.afterInsert(model, this);
+  },
+
+
+  /**
+   * Trigger before insert
+   * @param   {Object}  obj
+   * @private
+   * */
+  beforeInsert: function beforeInsert(obj) {},
+
+
+  /**
+   * Trigger after insert
+   * @param  {Object}  model  Model created after insert
+   * @private
+   * */
+  afterInsert: function afterInsert(model) {},
+
+
+  /**
+   * Create different object, based on content, to insert inside canvas
+   *
+   * @return   {Object}
+   * @private
+   * */
+  buildContent: function buildContent() {
+    return this.opt.content || {};
+  }
+});
+
+/***/ }),
+
 /***/ "./src/commands/view/MoveComponent.js":
 /*!********************************************!*\
   !*** ./src/commands/view/MoveComponent.js ***!
@@ -28833,6 +28791,7 @@ var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
 var ToolbarView = __webpack_require__(/*! dom_components/view/ToolbarView */ "./src/dom_components/view/ToolbarView.js");
 var Toolbar = __webpack_require__(/*! dom_components/model/Toolbar */ "./src/dom_components/model/Toolbar.js");
+var key = __webpack_require__(/*! keymaster */ "./node_modules/keymaster/keymaster.js");
 var $ = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js").$;
 var showOffsets = void 0;
 
@@ -28876,7 +28835,6 @@ module.exports = {
    * */
   toggleSelectComponent: function toggleSelectComponent(enable) {
     var em = this.em;
-
     var method = enable ? 'on' : 'off';
     var methods = { on: _mixins.on, off: _mixins.off };
     var body = this.getCanvasBody();
@@ -28940,8 +28898,8 @@ module.exports = {
    * @param {Object}  e
    * @private
    */
-  onOut: function onOut(ev) {
-    ev && ev.stopPropagation();
+  onOut: function onOut(e) {
+    e.stopPropagation();
     this.hideBadge();
     this.hideHighlighter();
     this.hideElementOffset();
@@ -28974,9 +28932,7 @@ module.exports = {
    * @param {Object} pos
    */
   hideElementOffset: function hideElementOffset(el, pos) {
-    var editor = this.editor;
-
-    editor && editor.stopCommand('show-offset');
+    this.editor.stopCommand('show-offset');
   },
 
 
@@ -29020,6 +28976,7 @@ module.exports = {
   onClick: function onClick(e) {
     e.stopPropagation();
     var $el = $(e.target);
+    var editor = this.editor;
     var model = $el.data('model');
 
     if (!model) {
@@ -29128,15 +29085,12 @@ module.exports = {
     var bStyle = badge.style;
     var u = 'px';
     bStyle.display = 'block';
-    var canvasPos = this.getCanvasPosition();
-
+    var canvasPos = canvas.getCanvasView().getPosition();
     if (canvasPos) {
-      var canvasTop = canvasPos.top;
-      var canvasLeft = canvasPos.left;
-      var posTop = pos.top - (badge ? badge.offsetHeight : 0);
+      var badgeH = badge ? badge.offsetHeight : 0;
       var badgeW = badge ? badge.offsetWidth : 0;
-      var top = posTop < canvasTop ? canvasTop : posTop;
-      var left = pos.left + badgeW < canvasLeft ? canvasLeft : pos.left;
+      var top = pos.top - badgeH < canvasPos.top ? canvasPos.top : pos.top - badgeH;
+      var left = pos.left + badgeW < canvasPos.left ? canvasPos.left : pos.left;
       bStyle.top = top + u;
       bStyle.left = left + u;
     }
@@ -29319,8 +29273,7 @@ module.exports = {
       if ((typeof resizable === 'undefined' ? 'undefined' : _typeof(resizable)) == 'object') {
         options = _extends({}, options, resizable);
       }
-
-      editor.runCommand('resize', { el: el, options: options, force: 1 });
+      editor.runCommand('resize', { el: el, options: options });
 
       // On undo/redo the resizer rect is not updating, need somehow to call
       // this.updateRect on undo/redo action
@@ -29533,7 +29486,7 @@ module.exports = {
     this.stopSelectComponent();
     !opts.preserveSelected && em.setSelected(null);
     this.clean();
-    this.onOut();
+    this.hideBadge();
     this.hideFixedElementOffset();
     this.canvas.getToolbarEl().style.display = 'none';
 
@@ -29595,8 +29548,6 @@ module.exports = {
    * @private
    * */
   startSelectPosition: function startSelectPosition(trg, doc) {
-    var _this = this;
-
     this.isPointed = false;
     var utils = this.editorModel.get('Utils');
     if (utils && !this.sorter) this.sorter = new utils.Sorter({
@@ -29610,10 +29561,7 @@ module.exports = {
       wmargin: 1,
       nested: 1,
       em: this.editorModel,
-      canvasRelative: 1,
-      scale: function scale() {
-        return _this.em.getZoomDecimal();
-      }
+      canvasRelative: 1
     });
     trg && this.sorter.startSort(trg);
   },
@@ -29717,10 +29665,8 @@ module.exports = {
     var opt = opts || {};
     var state = opt.state || '';
     var config = editor.getConfig();
-    var zoom = this.em.getZoomDecimal();
 
     if (!config.showOffsets || !config.showOffsetsSelected && state == 'Fixed') {
-      editor.stopCommand(this.id, opts);
       return;
     }
 
@@ -29783,10 +29729,9 @@ module.exports = {
     }
 
     var unit = 'px';
-    var marginLeftSt = parseFloat(style.marginLeft.replace(unit, '')) * zoom;
-    var marginRightSt = parseFloat(style.marginRight.replace(unit, '')) * zoom;
-    var marginTopSt = parseFloat(style.marginTop.replace(unit, '')) * zoom;
-    var marginBottomSt = parseFloat(style.marginBottom.replace(unit, '')) * zoom;
+    var marginLeftSt = style.marginLeft.replace(unit, '');
+    var marginTopSt = parseInt(style.marginTop.replace(unit, ''));
+    var marginBottomSt = parseInt(style.marginBottom.replace(unit, ''));
     var mtStyle = marginT.style;
     var mbStyle = marginB.style;
     var mlStyle = marginL.style;
@@ -29795,55 +29740,54 @@ module.exports = {
     var pbStyle = padB.style;
     var plStyle = padL.style;
     var prStyle = padR.style;
-    var posLeft = parseFloat(pos.left);
-    var widthEl = parseFloat(style.width) * zoom + unit;
+    var posLeft = parseInt(pos.left);
 
     // Margin style
-    mtStyle.height = marginTopSt + unit;
-    mtStyle.width = widthEl;
-    mtStyle.top = pos.top - marginTopSt + unit;
+    mtStyle.height = style.marginTop;
+    mtStyle.width = style.width;
+    mtStyle.top = pos.top - style.marginTop.replace(unit, '') + unit;
     mtStyle.left = posLeft + unit;
 
-    mbStyle.height = marginBottomSt + unit;
-    mbStyle.width = widthEl;
+    mbStyle.height = style.marginBottom;
+    mbStyle.width = style.width;
     mbStyle.top = pos.top + pos.height + unit;
     mbStyle.left = posLeft + unit;
 
     var marginSideH = pos.height + marginTopSt + marginBottomSt + unit;
     var marginSideT = pos.top - marginTopSt + unit;
     mlStyle.height = marginSideH;
-    mlStyle.width = marginLeftSt + unit;
+    mlStyle.width = style.marginLeft;
     mlStyle.top = marginSideT;
     mlStyle.left = posLeft - marginLeftSt + unit;
 
     mrStyle.height = marginSideH;
-    mrStyle.width = marginRightSt + unit;
+    mrStyle.width = style.marginRight;
     mrStyle.top = marginSideT;
     mrStyle.left = posLeft + pos.width + unit;
 
     // Padding style
-    var padTop = parseFloat(style.paddingTop) * zoom;
-    ptStyle.height = padTop + unit;
-    ptStyle.width = widthEl;
+    var padTop = parseInt(style.paddingTop.replace(unit, ''));
+    ptStyle.height = style.paddingTop;
+    ptStyle.width = style.width;
     ptStyle.top = pos.top + unit;
     ptStyle.left = posLeft + unit;
 
-    var padBot = parseFloat(style.paddingBottom) * zoom;
-    pbStyle.height = padBot + unit;
-    pbStyle.width = widthEl;
+    var padBot = parseInt(style.paddingBottom.replace(unit, ''));
+    pbStyle.height = style.paddingBottom;
+    pbStyle.width = style.width;
     pbStyle.top = pos.top + pos.height - padBot + unit;
     pbStyle.left = posLeft + unit;
 
     var padSideH = pos.height - padBot - padTop + unit;
     var padSideT = pos.top + padTop + unit;
     plStyle.height = padSideH;
-    plStyle.width = parseFloat(style.paddingLeft) * zoom + unit;
+    plStyle.width = style.paddingLeft;
     plStyle.top = padSideT;
     plStyle.left = pos.left + unit;
 
-    var padRight = parseFloat(style.paddingRight) * zoom;
+    var padRight = parseInt(style.paddingRight.replace(unit, ''));
     prStyle.height = padSideH;
-    prStyle.width = padRight + unit;
+    prStyle.width = style.paddingRight;
     prStyle.top = padSideT;
     prStyle.left = pos.left + pos.width - padRight + unit;
   },
@@ -29877,6 +29821,55 @@ module.exports = {
     ed.Canvas.getBody().className = '';
   }
 };
+
+/***/ }),
+
+/***/ "./src/commands/view/TextComponent.js":
+/*!********************************************!*\
+  !*** ./src/commands/view/TextComponent.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
+var _underscore2 = _interopRequireDefault(_underscore);
+
+var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+
+var _backbone2 = _interopRequireDefault(_backbone);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var CreateComponent = __webpack_require__(/*! ./CreateComponent */ "./src/commands/view/CreateComponent.js");
+
+module.exports = _underscore2.default.extend({}, CreateComponent, {
+  /**
+   * This event is triggered at the beginning of a draw operation
+   * @param   {Object}   component  Object component before creation
+   * @private
+   * */
+  beforeDraw: function beforeDraw(component) {
+    component.type = 'text';
+    if (!component.style) component.style = {};
+    component.style.padding = '10px';
+  },
+
+
+  /**
+   * This event is triggered at the end of a draw operation
+   * @param   {Object}  model  Component model created
+   * @private
+   * */
+  afterDraw: function afterDraw(model) {
+    if (!model || !model.set) return;
+    model.trigger('focus');
+    if (this.sender) this.sender.set('active', false);
+  }
+});
 
 /***/ }),
 
@@ -31856,7 +31849,7 @@ module.exports = function () {
       // If the model/view is a simple object I need to extend it
       if ((typeof model === 'undefined' ? 'undefined' : _typeof(model)) === 'object') {
         methods.model = modelToExt.extend(_extends({}, model, {
-          defaults: _extends({}, modelToExt.prototype.defaults, (0, _underscore.result)(model, 'defaults') || {})
+          defaults: _extends({}, modelToExt.prototype.defaults, model.defaults || {})
         }), {
           isComponent: compType && !extendType && !isComponent ? modelToExt.isComponent : isComponent || function () {
             return 0;
@@ -36863,10 +36856,7 @@ module.exports = {
   textViewCode: 'Code',
 
   // Keep unused styles within the editor
-  keepUnusedStyles: 0,
-
-  // TODO
-  multiFrames: 0
+  keepUnusedStyles: 0
 };
 
 /***/ }),
@@ -38332,9 +38322,6 @@ module.exports = Backbone.Model.extend({
   getDirtyCount: function getDirtyCount() {
     return this.get('changesCount');
   },
-  getZoomDecimal: function getZoomDecimal() {
-    return this.get('Canvas').getZoomDecimal();
-  },
 
 
   /**
@@ -38527,7 +38514,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.54',
+    version: '0.14.53',
 
     /**
      * Initialize the editor with passed options
@@ -38723,7 +38710,6 @@ module.exports = function () {
      * @param {string} id Keymap id
      * @param {string} keys Keymap keys, eg. `ctrl+a`, `⌘+z, ctrl+z`
      * @param {Function|string} handler Keymap handler, might be a function
-     * @param {Object} [opts={}] Options
      * @return {Object} Added keymap
      *  or just a command id as a string
      * @example
@@ -38740,22 +38726,17 @@ module.exports = function () {
      * })
      */
     add: function add(id, keys, handler) {
-      var opts = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-
       var em = this.em;
-      var editor = em.getEditor();
       var cmd = em.get('Commands');
-      var canvas = em.get('Canvas');
+      var editor = em.getEditor();
       var keymap = { id: id, keys: keys, handler: handler };
       var pk = keymaps[id];
       pk && this.remove(id);
       keymaps[id] = keymap;
       keymaster(keys, function (e, h) {
         // It's safer putting handlers resolution inside the callback
-        var opt = { event: e, h: h };
         handler = (0, _underscore.isString)(handler) ? cmd.get(handler) : handler;
-        opts.prevent && canvas.getCanvasView().preventDefault(e);
-        (typeof handler === 'undefined' ? 'undefined' : _typeof(handler)) == 'object' ? handler.run(editor, 0, opt) : handler(editor, 0, opt);
+        (typeof handler === 'undefined' ? 'undefined' : _typeof(handler)) == 'object' ? handler.run(editor) : handler(editor);
         var args = [id, h.shortcut, e];
         em.trigger.apply(em, ['keymap:emit'].concat(args));
         em.trigger.apply(em, ['keymap:emit:' + id].concat(args));
@@ -51894,59 +51875,56 @@ exports.default = function ($, undefined) {
 "use strict";
 
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 
-var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+var _backbone2 = _interopRequireDefault(_backbone);
 
-var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var options = {
-  /**
-   * Callback on start
-   * onStart(ev, dragger) {
-   *  console.log('pointer start', dragger.startPointer, 'position start', dragger.startPosition);
-   * },
-   */
-  onStart: null,
-  /**
-   * Callback on drag
-   * onDrag(ev, dragger) {
-   *  console.log('pointer', dragger.currentPointer, 'position', dragger.position, 'delta', dragger.delta);
-   * },
-   */
-  onDrag: null,
-  /**
-   * Callback on drag
-   * onEnd(ev, dragger) {
-   *  console.log('pointer', dragger.currentPointer, 'position', dragger.position, 'delta', dragger.delta);
-   * },
-   */
-  onEnd: null,
-  /**
-   * Indicate a callback where to pass an object with new coordinates
-   */
-  setPosition: null,
-  /**
-   * Indicate a callback where to get initial coordinates.
-   * getPosition: () => {
-   *  ...
-   *  return { x: 10, y: 100 }
-   * }
-   */
-  getPosition: null
+var $ = _backbone2.default.$;
+
+var getBoundingRect = function getBoundingRect(el, win) {
+  var w = win || window;
+  var rect = el.getBoundingClientRect();
+  return {
+    left: rect.left + w.pageXOffset,
+    top: rect.top + w.pageYOffset,
+    width: rect.width,
+    height: rect.height
+  };
 };
 
 module.exports = {
+  // TODO move to opts
+  setKey: function setKey(keys, command) {
+    //key(keys, command);
+  },
+
+
+  /**
+   * Return element position
+   * @param  {HTMLElement} el
+   * @return {Object}
+   */
+  getElementRect: function getElementRect(el) {
+    var posFetcher = this.opts.posFetcher || '';
+    return posFetcher ? posFetcher(el, {
+      avoidFrameOffset: 1
+    }) : getBoundingRect(el);
+  },
+
+
   /**
    * Init the resizer
    * @param  {Object} opts
    */
   init: function init(opts) {
-    (0, _underscore.bindAll)(this, 'drag', 'stop');
-    this.opts = options;
     this.setOptions(opts);
-    this.delta = { x: 0, y: 0 };
-    this.startPosition = this.getStartPosition();
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.drag = this.drag.bind(this);
+    this.move = this.move.bind(this);
+    this.stop = this.stop.bind(this);
+    this.setKey('up, right, down, left', this.handleKey);
     return this;
   },
 
@@ -51955,17 +51933,43 @@ module.exports = {
    * Update options
    * @param {Object} options
    */
-  setOptions: function setOptions() {
-    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    this.opts = _extends({}, this.opts, opts);
+  setOptions: function setOptions(opts) {
+    this.opts = opts || {};
   },
-  toggleDrag: function toggleDrag(enable) {
-    var docs = this.getDocumentEl();
-    var method = enable ? 'on' : 'off';
-    var methods = { on: _mixins.on, off: _mixins.off };
-    methods[method](docs, 'mousemove', this.drag);
-    methods[method](docs, 'mouseup', this.stop);
+
+
+  /**
+   * Focus dragger on the element
+   * @param {HTMLElement} el
+   */
+  focus: function focus(el) {
+    // Avoid focusing on already focused element
+    if (el && el === this.el) {
+      return;
+    }
+
+    this.getDocumentEl(el);
+    this.blur();
+    this.el = el;
+    this.handlers = this.opts.dragHandlers || [el];
+
+    var elRect = this.getElementRect(el); //<-- TODO have wrong top:left
+    this.elRect = elRect;
+    this.startTop = elRect.top;
+    this.startLeft = elRect.left;
+
+    // TODO init snapper
+
+    this.getDocumentEl().on('mousedown', this.handleMouseDown);
+  },
+
+
+  /**
+   * Blur from the focused element
+   */
+  blur: function blur() {
+    this.getDocumentEl().off('mousedown', this.handleMouseDown);
+    this.el = null;
   },
 
 
@@ -51973,114 +51977,115 @@ module.exports = {
    * Start dragging
    * @param  {Event} e
    */
-  start: function start(ev) {
+  start: function start(e) {
+    this.startPos = this.getMousePos(e);
+    var docs = this.getDocumentEl();
+    docs.on('mousemove', this.drag);
+    docs.on('mouseup', this.stop);
+
+    // Start callback
     var onStart = this.opts.onStart;
-
-    this.toggleDrag(1);
-    this.startPointer = this.getPointerPos(ev);
-    this.startPosition = this.getStartPosition();
-    (0, _underscore.isFunction)(onStart) && onStart(ev, this);
-    this.drag(ev);
-  },
-
-
-  /**
-   * Drag event
-   * @param  {Event} event
-   */
-  drag: function drag(ev) {
-    var startPointer = this.startPointer;
-
-    var currentPos = this.getPointerPos(ev);
-    var delta = {
-      x: currentPos.x - startPointer.x,
-      y: currentPos.y - startPointer.y
-    };
-    var lockedAxis = this.lockedAxis;
-
-    // Lock one axis
-
-    if (ev.shiftKey) {
-      lockedAxis = !lockedAxis && this.detectAxisLock(delta.x, delta.y);
-    } else {
-      lockedAxis = null;
+    if (typeof onStart === 'function') {
+      onStart(e, {
+        docs: docs,
+        el: this.el,
+        start: this.startPos,
+        elRect: this.elRect
+      });
     }
 
-    if (lockedAxis === 'x') {
-      delta.x = startPointer.x;
-    } else if (lockedAxis === 'y') {
-      delta.y = startPointer.y;
-    }
-
-    this.lockedAxis = lockedAxis;
-    this.delta = delta;
-    this.move(delta.x, delta.y);
-    this.currentPointer = currentPos;
-    var onDrag = this.opts.onDrag;
-
-    (0, _underscore.isFunction)(onDrag) && onDrag(ev, this);
-
-    // In case the mouse button was released outside of the window
-    ev.which === 0 && this.stop(ev);
+    this.drag(e);
   },
 
 
   /**
    * Stop dragging
    */
-  stop: function stop(ev) {
-    var delta = this.delta;
-
-    this.toggleDrag();
+  stop: function stop(e) {
+    var docs = this.getDocumentEl();
+    docs.off('mousemove', this.drag);
+    docs.off('mouseup', this.stop);
     this.lockedAxis = null;
-    this.move(delta.x, delta.y, 1);
-    var onEnd = this.opts.onEnd;
 
-    (0, _underscore.isFunction)(onEnd) && onEnd(ev, this);
+    // Stop callback
+    var onEnd = this.opts.onEnd;
+    if (typeof onEnd === 'function') {
+      onEnd(e, {
+        docs: docs,
+        delta: this.delta,
+        end: {
+          x: this.startLeft + this.delta.x,
+          y: this.startTop + this.delta.y
+        }
+      });
+    }
   },
 
 
   /**
-   * Move the element
-   * @param  {integer} x
-   * @param  {integer} y
+   * Handle mousedown to check if it's possible to drag
+   * @param  {Event} e
    */
-  move: function move(x, y, end) {
-    var el = this.el,
-        opts = this.opts;
-
-    var pos = this.startPosition;
-    var setPosition = opts.setPosition;
-
-    var xPos = pos.x + x;
-    var yPos = pos.y + y;
-    this.position = {
-      x: xPos,
-      y: yPos,
-      end: end
-    };
-
-    (0, _underscore.isFunction)(setPosition) && setPosition(this.position);
-
-    if (el) {
-      el.style.left = xPos + 'px';
-      el.style.top = yPos + 'px';
+  handleMouseDown: function handleMouseDown(e) {
+    var el = e.target;
+    if (this.isHandler(el)) {
+      this.start(e);
     }
   },
+
+
+  /**
+   * Detects if the clicked element is a valid handler
+   * @param  {HTMLElement} el
+   * @return {Boolean}
+   */
+  isHandler: function isHandler(el) {
+    var handlers = this.handlers;
+
+    for (var n in handlers) {
+      if (handlers[n] === el) return true;
+    }
+
+    return false;
+  },
+
+
+  /**
+   * Handle key press
+   * @param  {Event} e
+   * @param  {Object} handler
+   */
+  handleKey: function handleKey(e, handler) {
+    switch (handler.shortcut) {
+      case 'up':
+        this.move(0, -1);
+        break;
+      case 'right':
+        this.move(1, 0);
+        break;
+      case 'down':
+        this.move(0, 1);
+        break;
+      case 'left':
+        this.move(-1, 0);
+        break;
+    }
+  },
+
 
   /**
    * Returns documents
    */
   getDocumentEl: function getDocumentEl(el) {
-    el = el || this.el;
-
-    if (!this.docs) {
+    var el = el || this.el;
+    if (!this.$doc) {
       var docs = [document];
-      el && docs.push(el.ownerDocument);
-      this.docs = docs;
+      if (el) {
+        docs.push(el.ownerDocument);
+      }
+      this.$doc = $(docs);
     }
-
-    return this.docs;
+    return this.$doc;
   },
 
 
@@ -52089,42 +52094,127 @@ module.exports = {
    * @param  {Event} event
    * @return {Object}
    */
-  getPointerPos: function getPointerPos(ev) {
-    var getPos = this.opts.getPointerPosition;
-    return getPos ? getPos(ev) : {
-      x: ev.clientX,
-      y: ev.clientY
+  getMousePos: function getMousePos(e) {
+    var mouseFetch = this.opts.mousePosFetcher;
+    return mouseFetch ? mouseFetch(e) : {
+      x: e.clientX,
+      y: e.clientY
     };
   },
-  getStartPosition: function getStartPosition() {
-    var el = this.el,
-        opts = this.opts;
 
-    var getPos = opts.getPosition;
-    var result = { x: 0, y: 0 };
 
-    if ((0, _underscore.isFunction)(getPos)) {
-      result = getPos();
-    } else if (el) {
-      result = {
-        x: parseFloat(el.style.left),
-        y: parseFloat(el.style.top)
-      };
+  /**
+   * Drag event
+   * @param  {Event} event
+   */
+  drag: function drag(e) {
+    var lockedAxis = this.lockedAxis;
+    var currentPos = this.getMousePos(e);
+    var delta = {
+      x: currentPos.x - this.startPos.x,
+      y: currentPos.y - this.startPos.y
+    };
+    // Lock one axis
+    if (e.shiftKey) {
+      if (!lockedAxis) {
+        var relX = delta.x;
+        var relY = delta.y;
+        var absX = Math.abs(relX);
+        var absY = Math.abs(relY);
+
+        // Vertical or Horizontal lock
+        if (relY >= absX || relY <= -absX) {
+          lockedAxis = 'x';
+        } else if (relX > absY || relX < -absY) {
+          lockedAxis = 'y';
+        }
+      }
+    } else {
+      lockedAxis = null;
     }
 
-    return result;
-  },
-  detectAxisLock: function detectAxisLock(x, y) {
-    var relX = x;
-    var relY = y;
-    var absX = Math.abs(relX);
-    var absY = Math.abs(relY);
+    if (lockedAxis === 'x') {
+      delta.x = this.startPos.x;
+    }
 
-    // Vertical or Horizontal lock
-    if (relY >= absX || relY <= -absX) {
-      return 'x';
-    } else if (relX > absY || relX < -absY) {
-      return 'y';
+    if (lockedAxis === 'y') {
+      delta.y = this.startPos.y;
+    }
+
+    this.lockedAxis = lockedAxis;
+    this.delta = delta;
+    this.move(delta.x, delta.y);
+
+    // Drag callback
+    var onDrag = this.opts.onDrag;
+    if (typeof onDrag === 'function') {
+      onDrag(e, {
+        delta: delta,
+        current: {
+          x: this.startLeft + delta.x,
+          y: this.startTop + delta.y
+        },
+        lockedAxis: lockedAxis
+      });
+    }
+
+    // In case the mouse button was released outside of the window
+    if (e.which === 0) {
+      this.stop(e);
+    }
+  },
+
+
+  /**
+   * Move the element
+   * @param  {integer} x
+   * @param  {integer} y
+   */
+  move: function move(x, y) {
+    this.moveX(x);
+    this.moveY(y);
+  },
+
+  /**
+   * Move in x direction
+   * @param  {integer} x
+   */
+  moveX: function moveX(x) {
+    var el = this.el;
+    var opts = this.opts;
+    var xPos = this.startLeft + x;
+    var setX = this.opts.setX;
+
+    if (typeof setX === 'function') {
+      setX(xPos, {
+        el: el,
+        start: this.startLeft,
+        delta: x
+      });
+    } else {
+      el.style.left = xPos + 'px';
+    }
+  },
+
+
+  /**
+   * Move in y direction
+   * @param  {integer} y
+   */
+  moveY: function moveY(y) {
+    var el = this.el;
+    var opts = this.opts;
+    var yPos = this.startTop + y;
+    var setY = this.opts.setY;
+
+    if (typeof setY === 'function') {
+      setY(yPos, {
+        el: el,
+        start: this.startTop,
+        delta: y
+      });
+    } else {
+      el.style.top = yPos + 'px';
     }
   }
 };
@@ -52969,15 +53059,11 @@ module.exports = _backbone2.default.View.extend({
     this.dragHelper = null;
     this.canvasRelative = o.canvasRelative || 0;
     this.selectOnEnd = !o.avoidSelectOnEnd;
-    this.scale = o.scale;
 
     if (this.em && this.em.on) {
       this.em.on('change:canvasOffset', this.udpateOffset);
       this.udpateOffset();
     }
-  },
-  getScale: function getScale() {
-    return (0, _underscore.result)(this, scale) || 1;
   },
   getContainerEl: function getContainerEl() {
     if (!this.el) {
@@ -53629,19 +53715,19 @@ module.exports = _backbone2.default.View.extend({
    * @return {Array<number>}
    */
   getDim: function getDim(el) {
-    var em = this.em,
-        canvasRelative = this.canvasRelative;
-
     var top, left, height, width;
 
-    if (canvasRelative && em) {
-      var canvas = em.get('Canvas');
-      var pos = canvas.getElementPos(el);
-      var elOffsets = canvas.getElementOffsets(el);
-      top = pos.top - elOffsets.marginTop;
-      left = pos.left - elOffsets.marginLeft;
-      height = pos.height + elOffsets.marginTop + elOffsets.marginBottom;
-      width = pos.width + elOffsets.marginLeft + elOffsets.marginRight;
+    if (this.canvasRelative && this.em) {
+      var pos = this.em.get('Canvas').getElementPos(el);
+      var styles = window.getComputedStyle(el);
+      var marginTop = parseFloat(styles['marginTop']);
+      var marginBottom = parseFloat(styles['marginBottom']);
+      var marginRight = parseFloat(styles['marginRight']);
+      var marginLeft = parseFloat(styles['marginLeft']);
+      top = pos.top - marginTop;
+      left = pos.left - marginLeft;
+      height = pos.height + marginTop + marginBottom;
+      width = pos.width + marginLeft + marginRight;
     } else {
       var o = this.offset(el);
       top = this.relative ? el.offsetTop : o.top - (this.wmargin ? -1 : 1) * this.elT;
@@ -54433,7 +54519,7 @@ module.exports = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getUnitFromValue = exports.getPointerEvent = exports.normalizeFloat = exports.shallowDiff = exports.getElement = exports.getKeyChar = exports.getKeyCode = exports.camelCase = exports.getModel = exports.matches = exports.upFirst = exports.hasDnd = exports.off = exports.on = undefined;
+exports.getUnitFromValue = exports.getPointerEvent = exports.normalizeFloat = exports.shallowDiff = exports.getElement = exports.camelCase = exports.getModel = exports.matches = exports.upFirst = exports.hasDnd = exports.off = exports.on = undefined;
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
@@ -54577,18 +54663,6 @@ var getPointerEvent = function getPointerEvent(ev) {
   return ev.touches && ev.touches[0] ? ev.touches[0] : ev;
 };
 
-/**
- * Get cross-browser keycode
- * @param  {Event} ev
- * @return {Number}
- */
-var getKeyCode = function getKeyCode(ev) {
-  return ev.which || ev.keyCode;
-};
-var getKeyChar = function getKeyChar(ev) {
-  return String.fromCharCode(getKeyCode(ev));
-};
-
 exports.on = on;
 exports.off = off;
 exports.hasDnd = hasDnd;
@@ -54596,8 +54670,6 @@ exports.upFirst = upFirst;
 exports.matches = matches;
 exports.getModel = getModel;
 exports.camelCase = camelCase;
-exports.getKeyCode = getKeyCode;
-exports.getKeyChar = getKeyChar;
 exports.getElement = getElement;
 exports.shallowDiff = shallowDiff;
 exports.normalizeFloat = normalizeFloat;
