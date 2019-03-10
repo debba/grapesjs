@@ -48040,6 +48040,13 @@ module.exports = _backbone2.default.View.extend({
 
     var customFetchValue = this.customValue;
 
+    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
+      target.trigger('ownStyleFetch:property', property, model);
+      em.trigger('ownStyleFetch:property:' + property, model);
+      em.trigger('ownStyleFetch:property', property, model);
+      target = model.get('newTarget') || this.getTargetModel();
+    }
+
     if (!target) {
       return result;
     }
