@@ -22383,15 +22383,7 @@ module.exports = {
   modalTitle: 'Select Image',
 
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg',
-
-  // Template for using a custom assets template
-  useCustomAssetsTemplate: '',
-
-  // Hide File uploader, it could be useful to render a file upload button block
-  // in custom assets template and keeping upload logic using html elements in
-  // FileUploader view
-  hideFileUploader: 0
+  inputPlaceholder: 'http://path/to/the/image.jpg'
 };
 
 /***/ }),
@@ -22657,19 +22649,6 @@ module.exports = function () {
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
-    },
-
-
-    /**
-     *  Get assets element container
-     * @param {string} template
-     * @param {boolean} hideFileUploader
-     */
-    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
-      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (template !== '') c.useCustomAssetsTemplate = template;
-      c.hideFileUploader = hideFileUploader;
     },
 
 
@@ -23085,8 +23064,7 @@ module.exports = _backbone2.default.View.extend({
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-
-    return view.config.useCustomAssetsTemplate || '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
+    return '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -23246,9 +23224,6 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
-
-    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
-
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = this.ppfx + 'asset-manager';
     this.renderAssets();
@@ -23329,8 +23304,13 @@ module.exports = _backbone2.default.View.extend({
    * @private
    */
   onUploadEnd: function onUploadEnd(res) {
-    var em = this.config.em;
+    var $el = this.$el,
+        config = this.config;
+
+    var em = config.em;
     em && em.trigger('asset:upload:end', res);
+    var input = $el.find('input');
+    input && input.val('');
   },
 
 
@@ -24210,14 +24190,20 @@ module.exports = _backbone2.default.View.extend({
     sorter.endMove();
   },
   render: function render() {
-    var el = this.el;
-    var pfx = this.ppfx;
-    var className = pfx + 'block';
-    var label = this.model.get('label');
-    el.className += ' ' + className + ' ' + pfx + 'one-bg ' + pfx + 'four-color-h';
+    var em = this.em,
+        el = this.el,
+        ppfx = this.ppfx,
+        model = this.model;
+
+    var className = ppfx + 'block';
+    var label = model.get('label');
+    var render = model.get('render');
+    el.className += ' ' + className + ' ' + ppfx + 'one-bg ' + ppfx + 'four-color-h';
     el.innerHTML = '<div class="' + className + '-label">' + label + '</div>';
     el.title = el.textContent.trim();
-    (0, _mixins.hasDnd)(this.em) && el.setAttribute('draggable', true);
+    (0, _mixins.hasDnd)(em) && el.setAttribute('draggable', true);
+    var result = render && render({ el: el, model: model, className: className, prefix: ppfx });
+    if (result) el.innerHTML = result;
     return this;
   }
 });
@@ -24609,6 +24595,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * * [setCustomBadgeLabel](#setcustombadgelabel)
                                                                                                                                                                                                                                                                    * * [hasFocus](#hasfocus)
                                                                                                                                                                                                                                                                    * * [scrollTo](#scrollto)
+                                                                                                                                                                                                                                                                   * * [setZoom](#setzoom)
+                                                                                                                                                                                                                                                                   * * [getZoom](#getzoom)
                                                                                                                                                                                                                                                                    *
                                                                                                                                                                                                                                                                    * @module Canvas
                                                                                                                                                                                                                                                                    */
@@ -24934,7 +24922,9 @@ module.exports = function () {
      * @return {Object}
      * @private
      */
-    getTargetToElementDim: function getTargetToElementDim(target, element, options) {
+    getTargetToElementDim: function getTargetToElementDim(target, element) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
       var opts = options || {};
       var canvasPos = CanvasView.getPosition();
       if (!canvasPos) return;
@@ -25147,9 +25137,23 @@ module.exports = function () {
     postRender: function postRender() {
       if ((0, _mixins.hasDnd)(c.em)) this.droppable = new _Droppable2.default(c.em);
     },
+
+
+    /**
+     * Set zoom value
+     * @param {Number} value The zoom value, from 0 to 100
+     * @returns {this}
+     */
     setZoom: function setZoom(value) {
-      return canvas.set('zoom', parseFloat(value));
+      canvas.set('zoom', parseFloat(value));
+      return this;
     },
+
+
+    /**
+     * Get zoom value
+     * @returns {Number}
+     */
     getZoom: function getZoom() {
       return parseFloat(canvas.get('zoom'));
     },
@@ -25445,7 +25449,7 @@ module.exports = _backbone2.default.View.extend({
       // `body {height: 100%;}`.
       // For the moment I give the priority to Firefox as it might be
       // CKEditor's issue
-      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 50px;\n          width: 50px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (conf.protectedCss || '') + '\n      ';
+      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 100px;\n          width: 100px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (conf.protectedCss || '') + '\n      ';
 
       if (externalStyles) {
         head.append(externalStyles);
@@ -25724,10 +25728,13 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
    * Update dimensions of the frame
    * @private
    */
-  updateDim: function updateDim(model) {
-    var em = this.em;
+  updateDim: function updateDim() {
+    var em = this.em,
+        el = this.el,
+        $el = this.$el;
+    var style = el.style;
+
     var device = em.getDeviceModel();
-    var style = this.el.style;
     var currW = style.width || '';
     var currH = style.height || '';
     var newW = device ? device.get('width') : '';
@@ -25739,7 +25746,7 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
     // Prevent fixed highlighting box which appears when on
     // component hover during the animation
     em.stopDefault({ preserveSelected: 1 });
-    noChanges ? this.udpateOffset() : this.$el.on(motionsEv, this.udpateOffset);
+    noChanges ? this.udpateOffset() : $el.on(motionsEv, this.udpateOffset);
   },
   udpateOffset: function udpateOffset() {
     var em = this.em;
@@ -26992,6 +26999,7 @@ module.exports = function () {
      * @private
      * */
     create: function create(command) {
+      if (!command.stop) command.noStop = 1;
       var cmd = _CommandAbstract2.default.extend(command);
       return new cmd(c);
     }
@@ -28954,7 +28962,6 @@ module.exports = {
     var canvasResizer = this.canvasResizer;
     var options = opt.options || {};
     var canvasView = canvas.getCanvasView();
-    options.ratioDefault = 1;
     options.appendTo = canvas.getResizerEl();
     options.prefix = editor.getConfig().stylePrefix;
     options.posFetcher = canvasView.getElementPos.bind(canvasView);
@@ -29008,9 +29015,9 @@ module.exports = {
   },
   enable: function enable() {
     this.frameOff = this.canvasOff = this.adjScroll = null;
-    var config = this.config.em.get('Config');
     this.startSelectComponent();
     var em = this.config.em;
+
     showOffsets = 1;
 
     em.on('component:update', this.updateAttached, this);
@@ -29129,7 +29136,8 @@ module.exports = {
 
     this.editor.runCommand('show-offset', {
       el: el,
-      elPos: pos
+      elPos: pos,
+      force: 1
     });
   },
 
@@ -29486,12 +29494,10 @@ module.exports = {
         options = _extends({}, options, resizable);
       }
 
-      editor.runCommand('resize', { el: el, options: options, force: 1 });
-
-      // On undo/redo the resizer rect is not updating, need somehow to call
-      // this.updateRect on undo/redo action
+      this.resizer = editor.runCommand('resize', { el: el, options: options, force: 1 });
     } else {
       editor.stopCommand('resize');
+      this.resizer = null;
     }
   },
 
@@ -29634,8 +29640,11 @@ module.exports = {
   /**
    * Update attached elements, eg. component toolbar
    */
-  updateAttached: function updateAttached(updated) {
-    var model = this.em.getSelected();
+  updateAttached: function updateAttached() {
+    var resizer = this.resizer,
+        em = this.em;
+
+    var model = em.getSelected();
     var view = model && model.view;
 
     if (view) {
@@ -29643,6 +29652,7 @@ module.exports = {
 
       this.updateToolbarPos(el);
       this.showFixedElementOffset(el);
+      resizer && resizer.updateContainer();
     }
   },
 
@@ -30987,11 +30997,11 @@ module.exports = _backbone2.default.View.extend({
     }
 
     var fragment = fragmentEl || null;
-    var viewObject = CssRuleView;
     var config = this.config;
+
+    var opts = { model: model, config: config };
     var rendered = void 0,
         view = void 0;
-    var opts = { model: model, config: config };
 
     // I have to render keyframes of the same name together
     // Unfortunately at the moment I didn't find the way of appending them
@@ -31055,17 +31065,24 @@ module.exports = _backbone2.default.View.extend({
 
     this.renderStarted = 1;
     this.atRules = {};
-    var $el = this.$el;
+    var em = this.em,
+        $el = this.$el,
+        className = this.className,
+        collection = this.collection;
+
     var frag = document.createDocumentFragment();
-    var className = this.className;
     $el.empty();
 
-    // Create devices related DOM structure
-    this.em.get('DeviceManager').getAll().pluck('priority').forEach(function (priority) {
-      $('<div id="' + getBlockId(className, priority) + '"></div>').appendTo(frag);
+    // Create devices related DOM structure, ensure also to have a default container
+    var prs = em.get('DeviceManager').getAll().pluck('priority');
+    prs.every(function (pr) {
+      return pr;
+    }) && prs.unshift(0);
+    prs.forEach(function (pr) {
+      return $('<div id="' + getBlockId(className, pr) + '"></div>').appendTo(frag);
     });
 
-    this.collection.each(function (model) {
+    collection.each(function (model) {
       return _this.addToCollection(model, frag);
     });
     $el.append(frag);
@@ -31243,6 +31260,8 @@ module.exports = function () {
 "use strict";
 
 
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 var _backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 
 var _backbone2 = _interopRequireDefault(_backbone);
@@ -31256,7 +31275,7 @@ module.exports = _backbone2.default.Model.extend({
     name: '',
 
     // Width to set for the editor iframe
-    width: '',
+    width: null,
 
     // Height to set for the editor iframe
     height: '',
@@ -31270,13 +31289,20 @@ module.exports = _backbone2.default.Model.extend({
   },
 
   initialize: function initialize() {
-    if (this.get('widthMedia') == null) {
-      this.set('widthMedia', this.get('width'));
-    }
+    var _this = this;
 
-    if (!this.get('priority')) {
-      this.set('priority', parseFloat(this.get('widthMedia')) || 0);
-    }
+    this.get('widthMedia') === null && this.set('widthMedia', this.get('width'));
+    this.get('width') === null && this.set('width', this.get('widthMedia'));
+    !this.get('priority') && this.set('priority', parseFloat(this.get('widthMedia')) || 0);
+    var toCheck = ['width', 'height', 'widthMedia'];
+    toCheck.forEach(function (prop) {
+      return _this.checkUnit(prop);
+    });
+  },
+  checkUnit: function checkUnit(prop) {
+    var pr = this.get(prop) || '';
+    var noUnit = (parseFloat(pr) || 0).toString() === pr.toString();
+    noUnit && this.set(prop, pr + 'px');
   }
 });
 
@@ -32008,6 +32034,7 @@ module.exports = function () {
      * @return {this}
      */
     addType: function addType(type, methods) {
+      var em = this.em;
       var _methods$model = methods.model,
           model = _methods$model === undefined ? {} : _methods$model,
           _methods$view = methods.view,
@@ -32045,6 +32072,9 @@ module.exports = function () {
         methods.id = type;
         componentTypes.unshift(methods);
       }
+
+      var event = 'component:type:' + (compType ? 'update' : 'add');
+      em && em.trigger(event, compType || methods);
 
       return this;
     },
@@ -32663,8 +32693,10 @@ var Component = Backbone.Model.extend(_Styleable2.default).extend({
   initClasses: function initClasses() {
     var event = 'change:classes';
     var toListen = [this, event, this.initClasses];
+    var cls = this.get('classes') || [];
+    var clsArr = (0, _underscore.isString)(cls) ? cls.split(' ') : cls;
     this.stopListening.apply(this, toListen);
-    var classes = this.normalizeClasses(this.get('classes') || []);
+    var classes = this.normalizeClasses(clsArr);
     var selectors = new Selectors([]);
     this.set('classes', selectors);
     selectors.add(classes);
@@ -33355,19 +33387,27 @@ module.exports = Component;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+
 var Component = __webpack_require__(/*! ./Component */ "./src/dom_components/model/Component.js");
+var svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 24" style="fill: rgba(0,0,0,0.15); transform: scale(0.75)"';
 
 module.exports = Component.extend({
   defaults: _extends({}, Component.prototype.defaults, {
     type: 'image',
     tagName: 'img',
-    src: '',
     void: 1,
     droppable: 0,
     editable: 1,
     highlightable: 0,
-    resizable: 1,
+    resizable: { ratioDefault: 1 },
     traits: ['alt'],
+
+    src: '<svg ' + svgAttrs + '>\n        <path d="M8.5 13.5l2.5 3 3.5-4.5 4.5 6H5m16 1V5a2 2 0 0 0-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"></path>\n      </svg>',
+
+    // Fallback image in case the src can't be loaded
+    // If you use SVG, xmlns="http://www.w3.org/2000/svg" is required
+    fallback: '<svg ' + svgAttrs + '>\n        <path d="M2.28 3L1 4.27l2 2V19c0 1.1.9 2 2 2h12.73l2 2L21 21.72 2.28 3m2.55 0L21 19.17V5a2 2 0 0 0-2-2H4.83M8.5 13.5l2.5 3 1-1.25L14.73 18H5l3.5-4.5z"></path>\n      </svg>',
 
     // File to load asynchronously once the model is rendered
     file: ''
@@ -33425,10 +33465,24 @@ module.exports = Component.extend({
     }
 
     var attr = Component.prototype.getAttrToHTML.apply(this, args);
-    delete attr.onmousedown;
     var src = this.get('src');
     if (src) attr.src = src;
     return attr;
+  },
+  getSrcResult: function getSrcResult() {
+    var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    var src = this.get(opt.fallback ? 'fallback' : 'src') || '';
+    var result = src;
+
+    if (src && src.substr(0, 4) === '<svg') {
+      result = 'data:image/svg+xml;base64,' + window.btoa(src);
+    }
+
+    return result;
+  },
+  isDefaultSrc: function isDefaultSrc() {
+    return this.get('src') === (0, _underscore.result)(this, 'defaults').src;
   },
 
 
@@ -34044,7 +34098,12 @@ module.exports = Component.extend({
     type: 'text',
     droppable: false,
     editable: true
-  })
+  }),
+
+  toHTML: function toHTML() {
+    this.trigger('sync:content', { silent: 1 });
+    return Component.prototype.toHTML.apply(this, arguments);
+  }
 });
 
 /***/ }),
@@ -34111,7 +34170,7 @@ module.exports = Component.extend({
     tagName: 'video',
     videoId: '',
     void: 0,
-    provider: '', // on change of provider, traits are switched
+    provider: 'so', // on change of provider, traits are switched
     ytUrl: 'https://www.youtube.com/embed/',
     ytncUrl: 'https://www.youtube-nocookie.com/embed/',
     viUrl: 'https://player.vimeo.com/video/',
@@ -34266,7 +34325,6 @@ module.exports = Component.extend({
       label: 'Provider',
       name: 'provider',
       changeProp: 1,
-      value: this.get('provider'),
       options: [{ value: 'so', name: 'HTML5 Source' }, { value: yt, name: 'Youtube' }, { value: ytnc, name: 'Youtube (no cookie)' }, { value: vi, name: 'Vimeo' }]
     };
   },
@@ -34552,7 +34610,7 @@ module.exports = Backbone.Collection.extend({
     } else if ((0, _underscore.isArray)(models)) {
       models.forEach(function (item, index) {
         if ((0, _underscore.isString)(item)) {
-          models[index] = _this.parseString(item);
+          models[index] = _this.parseString(item, opt);
         }
       });
     }
@@ -34634,7 +34692,10 @@ module.exports = ComponentView.extend({
 
   events: {
     dblclick: 'onActive',
-    click: 'initResize'
+    click: 'initResize',
+    error: 'onError',
+    dragstart: 'noDrag',
+    mousedown: 'noDrag'
   },
 
   initialize: function initialize(o) {
@@ -34679,9 +34740,10 @@ module.exports = ComponentView.extend({
         classEmpty = this.classEmpty,
         $el = this.$el;
 
-    var src = model.get('src');
+    var src = model.getSrcResult();
+    var srcExists = src && !model.isDefaultSrc();
     model.addAttributes({ src: src });
-    $el[src ? 'removeClass' : 'addClass'](classEmpty);
+    $el[srcExists ? 'removeClass' : 'addClass'](classEmpty);
   },
 
 
@@ -34707,15 +34769,22 @@ module.exports = ComponentView.extend({
       });
     }
   },
+  onError: function onError() {
+    var fallback = this.model.getSrcResult({ fallback: 1 });
+    if (fallback) this.el.src = fallback;
+  },
+  noDrag: function noDrag(ev) {
+    ev.preventDefault();
+    return false;
+  },
   render: function render() {
     this.renderAttributes();
+    this.updateSrc();
     var $el = this.$el,
         model = this.model;
 
     var cls = $el.attr('class') || '';
     !model.get('src') && $el.attr('class', (cls + ' ' + this.classEmpty).trim());
-    // Avoid strange behaviours with drag and drop
-    $el.attr('onmousedown', 'return false');
     this.postRender();
 
     return this;
@@ -35000,6 +35069,8 @@ module.exports = __webpack_require__(/*! backbone */ "./node_modules/backbone/ba
 "use strict";
 
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
 var ComponentView = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
@@ -35017,6 +35088,7 @@ module.exports = ComponentView.extend({
     var em = this.em;
     this.listenTo(model, 'focus', this.onActive);
     this.listenTo(model, 'change:content', this.updateContentText);
+    this.listenTo(model, 'sync:content', this.syncContent);
     this.rte = em && em.get('RichTextEditor');
   },
   updateContentText: function updateContentText(m, v) {
@@ -35057,57 +35129,20 @@ module.exports = ComponentView.extend({
    * @private
    * */
   disableEditing: function disableEditing() {
-    var model = this.model;
+    var model = this.model,
+        rte = this.rte,
+        activeRte = this.activeRte;
+
     var editable = model.get('editable');
-    var rte = this.rte;
-    var contentOpt = { fromDisable: 1 };
 
     if (rte && editable) {
       try {
-        rte.disable(this, this.activeRte);
+        rte.disable(this, activeRte);
       } catch (err) {
         console.error(err);
       }
 
-      var content = this.getChildrenContainer().innerHTML;
-      var comps = model.get('components');
-      comps.length && comps.reset();
-      model.set('content', '', contentOpt);
-
-      // If there is a custom RTE the content is just baked staticly
-      // inside 'content'
-      if (rte.customRte) {
-        // Avoid double content by removing its children components
-        // and force to trigger change
-        model.set('content', content, contentOpt);
-      } else {
-        var clean = function clean(model) {
-          var selectable = !['text', 'default', ''].some(function (type) {
-            return model.is(type);
-          });
-          model.set({
-            editable: selectable && model.get('editable'),
-            highlightable: 0,
-            removable: 0,
-            draggable: 0,
-            copyable: 0,
-            selectable: selectable,
-            hoverable: selectable,
-            toolbar: ''
-          });
-          model.get('components').each(function (model) {
-            return clean(model);
-          });
-        };
-
-        // Avoid re-render on reset with silent option
-        model.trigger('change:content', model, '', contentOpt);
-        comps.add(content);
-        comps.each(function (model) {
-          return clean(model);
-        });
-        comps.trigger('resetNavigator');
-      }
+      this.syncContent();
     }
 
     this.rteEnabled = 0;
@@ -35116,10 +35151,61 @@ module.exports = ComponentView.extend({
 
 
   /**
+   * Merge content from the DOM to the model
+   */
+  syncContent: function syncContent() {
+    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var model = this.model,
+        rte = this.rte,
+        rteEnabled = this.rteEnabled;
+
+    if (!rteEnabled && !opts.force) return;
+    var content = this.getChildrenContainer().innerHTML;
+    var comps = model.components();
+    var contentOpt = _extends({ fromDisable: 1 }, opts);
+    comps.length && comps.reset(null, opts);
+    model.set('content', '', contentOpt);
+
+    // If there is a custom RTE the content is just baked staticly
+    // inside 'content'
+    if (rte.customRte) {
+      model.set('content', content, contentOpt);
+    } else {
+      var clean = function clean(model) {
+        var selectable = !['text', 'default', ''].some(function (type) {
+          return model.is(type);
+        });
+        model.set({
+          editable: selectable && model.get('editable'),
+          selectable: selectable,
+          hoverable: selectable,
+          highlightable: 0,
+          removable: 0,
+          draggable: 0,
+          copyable: 0,
+          toolbar: ''
+        }, opts);
+        model.get('components').each(function (model) {
+          return clean(model);
+        });
+      };
+
+      // Avoid re-render on reset with silent option
+      !opts.silent && model.trigger('change:content', model, '', contentOpt);
+      comps.add(content, opts);
+      comps.each(function (model) {
+        return clean(model);
+      });
+      comps.trigger('resetNavigator');
+    }
+  },
+
+
+  /**
    * Callback on input event
    * @param  {Event} e
    */
-  onInput: function onInput(e) {
+  onInput: function onInput() {
     var em = this.em;
 
     // Update toolbars
@@ -35203,20 +35289,26 @@ module.exports = ComponentView.extend({
    * @private
    */
   updateSrc: function updateSrc() {
-    var prov = this.model.get('provider');
-    var src = this.model.get('src');
+    var model = this.model,
+        videoEl = this.videoEl;
+
+    if (!videoEl) return;
+    var prov = model.get('provider');
+    var src = model.get('src');
+
     switch (prov) {
       case 'yt':
-        src = this.model.getYoutubeSrc();
+        src = model.getYoutubeSrc();
         break;
       case 'ytnc':
-        src = this.model.getYoutubeNoCookieSrc();
+        src = model.getYoutubeNoCookieSrc();
         break;
       case 'vi':
-        src = this.model.getVimeoSrc();
+        src = model.getVimeoSrc();
         break;
     }
-    this.videoEl.src = src;
+
+    videoEl.src = src;
   },
 
 
@@ -37170,6 +37262,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * * `component:selected` - New component selected, the selected model is passed as an argument to the callback
                                                                                                                                                                                                                                                                    * * `component:deselected` - Component deselected, the deselected model is passed as an argument to the callback
                                                                                                                                                                                                                                                                    * * `component:toggled` - Component selection changed, toggled model is passed as an argument to the callback
+                                                                                                                                                                                                                                                                   * * `component:type:add` - New component type added, the new type is passed as an argument to the callback
+                                                                                                                                                                                                                                                                   * * `component:type:update` - Component type updated, the updated type is passed as an argument to the callback
                                                                                                                                                                                                                                                                    * ### Blocks
                                                                                                                                                                                                                                                                    * * `block:add` - New block added
                                                                                                                                                                                                                                                                    * * `block:remove` - Block removed
@@ -37226,10 +37320,11 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * * `stop:{commandName}:before` - Triggered before the command is called to stop
                                                                                                                                                                                                                                                                    * * `abort:{commandName}` - Triggered when the command execution is aborted (`editor.on(`run:preview:before`, opts => opts.abort = 1);`)
                                                                                                                                                                                                                                                                    * ### General
-                                                                                                                                                                                                                                                                   * * `canvasScroll` - Triggered when the canvas is scrolle
+                                                                                                                                                                                                                                                                   * * `canvasScroll` - Canvas is scrolled
+                                                                                                                                                                                                                                                                   * * `update` - The structure of the template is updated (its HTML/CSS)
                                                                                                                                                                                                                                                                    * * `undo` - Undo executed
                                                                                                                                                                                                                                                                    * * `redo` - Redo executed
-                                                                                                                                                                                                                                                                   * * `load` - When the editor is loaded
+                                                                                                                                                                                                                                                                   * * `load` - Editor is loaded
                                                                                                                                                                                                                                                                    *
                                                                                                                                                                                                                                                                    * @module Editor
                                                                                                                                                                                                                                                                    */
@@ -37932,6 +38027,7 @@ var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/back
 var Collection = Backbone.Collection;
 
 var timedInterval = void 0;
+var updateItr = void 0;
 
 __webpack_require__(/*! utils/extender */ "./src/utils/extender.js")({
   Backbone: Backbone,
@@ -38065,8 +38161,14 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   updateChanges: function updateChanges() {
+    var _this3 = this;
+
     var stm = this.get('StorageManager');
     var changes = this.get('changesCount');
+    updateItr && clearTimeout(updateItr);
+    updateItr = setTimeout(function () {
+      return _this3.trigger('update');
+    });
 
     if (this.config.noticeOnUnload) {
       window.onbeforeunload = changes ? function (e) {
@@ -38141,7 +38243,7 @@ module.exports = Backbone.Model.extend({
    * @private
    * */
   handleUpdates: function handleUpdates(model, val) {
-    var _this3 = this;
+    var _this4 = this;
 
     var opt = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
@@ -38153,7 +38255,7 @@ module.exports = Backbone.Model.extend({
     timedInterval && clearInterval(timedInterval);
     timedInterval = setTimeout(function () {
       if (!opt.avoidStore) {
-        _this3.set('changesCount', _this3.get('changesCount') + 1, opt);
+        _this4.set('changesCount', _this4.get('changesCount') + 1, opt);
       }
     }, 0);
   },
@@ -38200,7 +38302,7 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   setSelected: function setSelected(el) {
-    var _this4 = this;
+    var _this5 = this;
 
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -38217,10 +38319,10 @@ module.exports = Backbone.Model.extend({
     els.forEach(function (el) {
       var model = (0, _mixins.getModel)(el, $);
       if (model && !model.get('selectable')) return;
-      !multiple && _this4.removeSelected(selected.filter(function (s) {
+      !multiple && _this5.removeSelected(selected.filter(function (s) {
         return s !== model;
       }));
-      _this4.addSelected(model, opts);
+      _this5.addSelected(model, opts);
     });
   },
 
@@ -38232,7 +38334,7 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   addSelected: function addSelected(el) {
-    var _this5 = this;
+    var _this6 = this;
 
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -38241,7 +38343,7 @@ module.exports = Backbone.Model.extend({
 
     models.forEach(function (model) {
       if (model && !model.get('selectable')) return;
-      var selected = _this5.get('selected');
+      var selected = _this6.get('selected');
       opts.forceChange && selected.remove(model, opts);
       selected.push(model, opts);
     });
@@ -38268,7 +38370,7 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   toggleSelected: function toggleSelected(el) {
-    var _this6 = this;
+    var _this7 = this;
 
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -38276,10 +38378,10 @@ module.exports = Backbone.Model.extend({
     var models = (0, _underscore.isArray)(model) ? model : [model];
 
     models.forEach(function (model) {
-      if (_this6.get('selected').contains(model)) {
-        _this6.removeSelected(model, opts);
+      if (_this7.get('selected').contains(model)) {
+        _this7.removeSelected(model, opts);
       } else {
-        _this6.addSelected(model, opts);
+        _this7.addSelected(model, opts);
       }
     });
   },
@@ -38416,7 +38518,7 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   store: function store(clb) {
-    var _this7 = this;
+    var _this8 = this;
 
     var sm = this.get('StorageManager');
     var store = {};
@@ -38432,8 +38534,8 @@ module.exports = Backbone.Model.extend({
 
     sm.store(store, function (res) {
       clb && clb(res);
-      _this7.set('changesCount', 0);
-      _this7.trigger('storage:store', store);
+      _this8.set('changesCount', 0);
+      _this8.trigger('storage:store', store);
     });
 
     return store;
@@ -38446,12 +38548,12 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   load: function load() {
-    var _this8 = this;
+    var _this9 = this;
 
     var clb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
     this.getCacheLoad(1, function (res) {
-      _this8.get('storables').forEach(function (module) {
+      _this9.get('storables').forEach(function (module) {
         return module.load(res);
       });
       clb && clb(res);
@@ -38467,7 +38569,7 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   getCacheLoad: function getCacheLoad(force, clb) {
-    var _this9 = this;
+    var _this10 = this;
 
     var f = force ? 1 : 0;
     if (this.cacheLoad && !f) return this.cacheLoad;
@@ -38486,10 +38588,10 @@ module.exports = Backbone.Model.extend({
     });
 
     sm.load(load, function (res) {
-      _this9.cacheLoad = res;
+      _this10.cacheLoad = res;
       clb && clb(res);
       setTimeout(function () {
-        return _this9.trigger('storage:load', res);
+        return _this10.trigger('storage:load', res);
       }, 0);
     });
   },
@@ -38785,7 +38887,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.54',
+    version: '0.14.55',
 
     /**
      * Initialize the editor with passed options
@@ -39524,12 +39626,13 @@ module.exports = {
   showHover: 1,
 
   // Scroll to selected component in Canvas when it's selected in Layers
-  // true, false or `scrollIntoView`-like options
-  scrollCanvas: { behavior: 'smooth' },
+  // true, false or `scrollIntoView`-like options,
+  // `block: 'nearest'` avoids the issue of window scolling
+  scrollCanvas: { behavior: 'smooth', block: 'nearest' },
 
   // Scroll to selected component in Layers when it's selected in Canvas
   // true, false or `scrollIntoView`-like options
-  scrollLayers: 1,
+  scrollLayers: { behavior: 'auto', block: 'nearest' },
 
   // Highlight when a layer component is hovered
   highlightHover: 1
@@ -40878,8 +40981,8 @@ module.exports = _backbone2.default.View.extend({
       model.set('active', true, { silent: true }).trigger('checkActive');
       commands.runCommand(command, _extends({}, options, { sender: model }));
 
-      // Disable button if the command was just a function
-      cmdIsFunc && model.set('active', false);
+      // Disable button if the command has no stop method
+      command.noStop && model.set('active', false);
     } else {
       this.$el.removeClass(this.activeCls);
       model.collection.deactivateAll(context);
@@ -45241,6 +45344,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
+var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
+
 var Property = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js").Model.extend({
   defaults: {
     name: '',
@@ -45285,14 +45390,12 @@ var Property = __webpack_require__(/*! backbone */ "./node_modules/backbone/back
     var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var name = this.get('name');
+    var id = this.get('id') || '';
+    var name = this.get('name') || '';
+    !this.get('property') && this.set('property', (name || id).replace(/ /g, '-'));
     var prop = this.get('property');
     !this.get('id') && this.set('id', prop);
-
-    if (!name) {
-      this.set('name', prop.charAt(0).toUpperCase() + prop.slice(1).replace(/-/g, ' '));
-    }
-
+    !name && this.set('name', (0, _mixins.capitalize)(prop).replace(/-/g, ' '));
     Property.callInit(this, props, opts);
   },
   init: function init() {},
@@ -52901,22 +53004,8 @@ var Resizer = function () {
         return;
       }
 
-      // Show the handlers
       this.el = el;
-      var config = this.opts;
-      var unit = 'px';
-      var rect = this.getElementPos(el, { target: 'container' });
-      var container = this.container;
-      var contStyle = container.style;
-
-      if (!config.avoidContainerUpdate) {
-        contStyle.left = rect.left + unit;
-        contStyle.top = rect.top + unit;
-        contStyle.width = rect.width + unit;
-        contStyle.height = rect.height + unit;
-        contStyle.display = 'block';
-      }
-
+      this.updateContainer({ forceShow: 1 });
       (0, _mixins.on)(this.getDocumentEl(), 'mousedown', this.handleMouseDown);
     }
 
@@ -53048,7 +53137,6 @@ var Resizer = function () {
       var resizer = this;
       var config = this.opts;
       var rect = this.rectDim;
-      var conStyle = this.container.style;
       var updateTarget = this.updateTarget;
       var selectedHandler = this.getSelectedHandler();
       var unitHeight = config.unitHeight,
@@ -53071,13 +53159,25 @@ var Resizer = function () {
         elStyle[keyHeight] = rect.h + unitHeight;
       }
 
-      var unitRect = 'px';
-      var rectEl = this.getElementPos(el, { target: 'container' });
-      if (!config.avoidContainerUpdate) {
-        conStyle.left = rectEl.left + unitRect;
-        conStyle.top = rectEl.top + unitRect;
-        conStyle.width = rectEl.width + unitRect;
-        conStyle.height = rectEl.height + unitRect;
+      this.updateContainer();
+    }
+  }, {
+    key: 'updateContainer',
+    value: function updateContainer() {
+      var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var opts = this.opts,
+          container = this.container,
+          el = this.el;
+      var style = container.style;
+
+
+      if (!opts.avoidContainerUpdate && el) {
+        var toUpdate = ['left', 'top', 'width', 'height'];
+        var rectEl = this.getElementPos(el, { target: 'container' });
+        toUpdate.forEach(function (pos) {
+          return style[pos] = rectEl[pos] + 'px';
+        });
+        if (opt.forceShow) style.display = 'block';
       }
     }
 
@@ -54751,7 +54851,7 @@ module.exports = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getUnitFromValue = exports.getPointerEvent = exports.normalizeFloat = exports.shallowDiff = exports.getElement = exports.getKeyChar = exports.getKeyCode = exports.camelCase = exports.getModel = exports.matches = exports.upFirst = exports.hasDnd = exports.off = exports.on = undefined;
+exports.capitalize = exports.getUnitFromValue = exports.getPointerEvent = exports.normalizeFloat = exports.shallowDiff = exports.getElement = exports.getKeyChar = exports.getKeyCode = exports.camelCase = exports.getModel = exports.matches = exports.upFirst = exports.hasDnd = exports.off = exports.on = undefined;
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
@@ -54907,6 +55007,10 @@ var getKeyChar = function getKeyChar(ev) {
   return String.fromCharCode(getKeyCode(ev));
 };
 
+var capitalize = function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.substring(1);
+};
+
 exports.on = on;
 exports.off = off;
 exports.hasDnd = hasDnd;
@@ -54921,6 +55025,7 @@ exports.shallowDiff = shallowDiff;
 exports.normalizeFloat = normalizeFloat;
 exports.getPointerEvent = getPointerEvent;
 exports.getUnitFromValue = getUnitFromValue;
+exports.capitalize = capitalize;
 
 /***/ }),
 
