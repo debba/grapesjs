@@ -295,7 +295,7 @@ module.exports = Backbone.View.extend({
       target.trigger('ownStyleFetch:property', property, model);
       em.trigger(`ownStyleFetch:property:${property}`, model);
       em.trigger(`ownStyleFetch:property`, property, model);
-      target = model.get('newTarget');
+      target = model.get('newTarget') || this.getTargetModel();
     }
 
     if (!target) {
