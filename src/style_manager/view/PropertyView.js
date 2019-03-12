@@ -288,15 +288,9 @@ module.exports = Backbone.View.extend({
     const properStrategy = this.model.get('useOwnStrategy');
     const em = this.em;
     const property = model.get('property');
+    const component = em && em.getSelected();
 
     var customFetchValue = this.customValue;
-
-    if (!isUndefined(properStrategy) && properStrategy) {
-      target.trigger('ownStyleFetch:property', property, model);
-      em.trigger(`ownStyleFetch:property:${property}`, model);
-      em.trigger(`ownStyleFetch:property`, property, model);
-      target = model.get('newTarget') || this.getTargetModel();
-    }
 
     if (!target) {
       return result;
@@ -306,6 +300,21 @@ module.exports = Backbone.View.extend({
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
+    }
+
+    model.unset('newResult', { silent: true });
+
+    if (!isUndefined(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleFetch:property', property, model, result);
+        component.trigger(`ownStyleFetch:property:${property}`, model, result);
+      }
+      em.trigger(`ownStyleFetch:property:${property}`, model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+
+      let newResult = model.get('newResult');
+
+      if (!isUndefined(newResult)) result = newResult;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -403,6 +412,7 @@ module.exports = Backbone.View.extend({
     const em = this.em;
     const target = this.getTarget();
     const style = target.getStyle();
+    const component = em && em.getSelected();
 
     if (value) {
       style[property] = value;
@@ -411,11 +421,27 @@ module.exports = Backbone.View.extend({
     }
 
     if (!isUndefined(properStrategy) && properStrategy) {
-      target.trigger('ownStyleUpdate:property', property, value);
+      if (component) {
+        component.trigger('ownStyleUpdate:property', property, value, target);
+        component.trigger(`ownStyleUpdate:property:${property}`, value, target);
+      }
+
       em.trigger(`ownStyleUpdate:property:${property}`, value, target);
       em.trigger(`ownStyleUpdate:property`, property, value, target);
+
+      let isOwnEdited = target.get('isOwnEdited');
+
+      if (isUndefined(isOwnEdited)) {
+        if (component) {
+          component.setStyle(style, opts);
+        } else target.setStyle(style, opts);
+      }
     } else {
-      target.setStyle(style, opts);
+      if (component) {
+        component.setStyle(style, opts);
+      } else {
+        target.setStyle(style, opts);
+      }
     }
 
     // Helper is used by `states` like ':hover' to show its preview
