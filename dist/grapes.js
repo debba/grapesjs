@@ -22383,15 +22383,7 @@ module.exports = {
   modalTitle: 'Select Image',
 
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg',
-
-  // Template for using a custom assets template
-  useCustomAssetsTemplate: '',
-
-  // Hide File uploader, it could be useful to render a file upload button block
-  // in custom assets template and keeping upload logic using html elements in
-  // FileUploader view
-  hideFileUploader: 0
+  inputPlaceholder: 'http://path/to/the/image.jpg'
 };
 
 /***/ }),
@@ -22657,19 +22649,6 @@ module.exports = function () {
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
-    },
-
-
-    /**
-     *  Get assets element container
-     * @param {string} template
-     * @param {boolean} hideFileUploader
-     */
-    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
-      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (template !== '') c.useCustomAssetsTemplate = template;
-      c.hideFileUploader = hideFileUploader;
     },
 
 
@@ -23085,8 +23064,7 @@ module.exports = _backbone2.default.View.extend({
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-
-    return view.config.useCustomAssetsTemplate || '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
+    return '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -23246,9 +23224,6 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
-
-    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
-
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = this.ppfx + 'asset-manager';
     this.renderAssets();
@@ -36146,6 +36121,7 @@ exports.default = {
     if ((0, _underscore.isString)(prop)) {
       prop = parseStyle(prop);
     }
+
     var propOrig = this.getStyle();
     var propNew = _extends({}, prop);
     this.set('style', propNew, opts);
@@ -38911,7 +38887,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.58',
+    version: '0.14.55',
 
     /**
      * Initialize the editor with passed options
@@ -48161,19 +48137,7 @@ module.exports = _backbone2.default.View.extend({
     var result;
     var model = this.model;
     var target = this.getTargetModel();
-
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
-    var property = model.get('property');
-
     var customFetchValue = this.customValue;
-
-    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
-      target.trigger('ownStyleFetch:property', property, model);
-      em.trigger('ownStyleFetch:property:' + property, model);
-      em.trigger('ownStyleFetch:property', property, model);
-      target = model.get('newTarget') || this.getTargetModel();
-    }
 
     if (!target) {
       return result;
@@ -48285,8 +48249,6 @@ module.exports = _backbone2.default.View.extend({
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     var property = name || this.model.get('property');
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
     var target = this.getTarget();
     var style = target.getStyle();
 
@@ -48296,13 +48258,7 @@ module.exports = _backbone2.default.View.extend({
       delete style[property];
     }
 
-    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
-      target.trigger('ownStyleUpdate:property', property, value);
-      em.trigger('ownStyleUpdate:property:' + property, value, target);
-      em.trigger('ownStyleUpdate:property', property, value, target);
-    } else {
-      target.setStyle(style, opts);
-    }
+    target.setStyle(style, opts);
 
     // Helper is used by `states` like ':hover' to show its preview
     var helper = this.getHelperModel();
