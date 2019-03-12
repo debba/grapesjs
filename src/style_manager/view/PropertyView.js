@@ -433,17 +433,9 @@ module.exports = Backbone.View.extend({
 
       let isOwnEdited = component.get('isOwnEdited');
 
-      if (isUndefined(isOwnEdited)) {
-        if (component) {
-          component.setStyle(style, opts);
-        } else target.setStyle(style, opts);
-      }
+      if (isUndefined(isOwnEdited)) target.setStyle(style, opts);
     } else {
-      if (component) {
-        component.setStyle(style, opts);
-      } else {
-        target.setStyle(style, opts);
-      }
+      target.setStyle(style, opts);
     }
 
     // Helper is used by `states` like ':hover' to show its preview

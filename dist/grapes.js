@@ -38911,7 +38911,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.60',
+    version: '0.14.61',
 
     /**
      * Initialize the editor with passed options
@@ -48302,6 +48302,8 @@ module.exports = _backbone2.default.View.extend({
     var style = target.getStyle();
     var component = em && em.getSelected();
 
+    component && component.unset('isOwnEdited');
+
     if (value) {
       style[property] = value;
     } else {
@@ -48317,7 +48319,7 @@ module.exports = _backbone2.default.View.extend({
       em.trigger('ownStyleUpdate:property:' + property, value);
       em.trigger('ownStyleUpdate:property', property, value);
 
-      var isOwnEdited = component.get('isOwnEdited');
+      var isOwnEdited = component && component.get('isOwnEdited');
 
       if ((0, _underscore.isUndefined)(isOwnEdited)) {
         if (component) {
