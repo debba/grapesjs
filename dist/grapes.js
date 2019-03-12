@@ -36029,7 +36029,6 @@ exports.default = {
     if ((0, _underscore.isString)(prop)) {
       prop = parseStyle(prop);
     }
-
     var propOrig = this.getStyle();
     var propNew = _extends({}, prop);
     this.set('style', propNew, opts);
@@ -38785,7 +38784,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.54',
+    version: '0.14.58',
 
     /**
      * Initialize the editor with passed options
@@ -48034,6 +48033,11 @@ module.exports = _backbone2.default.View.extend({
     var result;
     var model = this.model;
     var target = this.getTargetModel();
+
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
+    var property = model.get('property');
+
     var customFetchValue = this.customValue;
 
     if (!target) {
@@ -48044,6 +48048,14 @@ module.exports = _backbone2.default.View.extend({
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
+    }
+
+    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
+      target.trigger('ownStyleFetch:property', property, model, result);
+      em.trigger('ownStyleFetch:property:' + property, model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+      var newResult = model.get('newResult');
+      return newResult || result;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -48146,6 +48158,8 @@ module.exports = _backbone2.default.View.extend({
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     var property = name || this.model.get('property');
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
     var target = this.getTarget();
     var style = target.getStyle();
 
@@ -48155,7 +48169,13 @@ module.exports = _backbone2.default.View.extend({
       delete style[property];
     }
 
-    target.setStyle(style, opts);
+    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
+      target.trigger('ownStyleUpdate:property', property, value);
+      em.trigger('ownStyleUpdate:property:' + property, value, target);
+      em.trigger('ownStyleUpdate:property', property, value, target);
+    } else {
+      target.setStyle(style, opts);
+    }
 
     // Helper is used by `states` like ':hover' to show its preview
     var helper = this.getHelperModel();
