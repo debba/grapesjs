@@ -302,19 +302,21 @@ module.exports = Backbone.View.extend({
       result = model.getDefaultValue();
     }
 
-    model.unset('newResult', { silent: true });
+    if (component) {
+      component.unset('newResult', { silent: true });
+    }
 
     if (!isUndefined(properStrategy) && properStrategy) {
       if (component) {
-        component.trigger('ownStyleFetch:property', property, model, result);
-        component.trigger(`ownStyleFetch:property:${property}`, model, result);
+        component.trigger('ownStyleFetch:property', property, result);
+        component.trigger(`ownStyleFetch:property:${property}`, result);
+        em.trigger(`ownStyleFetch:property:${property}`, result);
+        em.trigger('ownStyleFetch:property', property, result);
+
+        let newResult = component.get('newResult');
+
+        if (!isUndefined(newResult)) result = newResult;
       }
-      em.trigger(`ownStyleFetch:property:${property}`, model, result);
-      em.trigger('ownStyleFetch:property', property, model, result);
-
-      let newResult = model.get('newResult');
-
-      if (!isUndefined(newResult)) result = newResult;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -422,14 +424,14 @@ module.exports = Backbone.View.extend({
 
     if (!isUndefined(properStrategy) && properStrategy) {
       if (component) {
-        component.trigger('ownStyleUpdate:property', property, value, target);
-        component.trigger(`ownStyleUpdate:property:${property}`, value, target);
+        component.trigger('ownStyleUpdate:property', property, value);
+        component.trigger(`ownStyleUpdate:property:${property}`, value);
       }
 
-      em.trigger(`ownStyleUpdate:property:${property}`, value, target);
-      em.trigger(`ownStyleUpdate:property`, property, value, target);
+      em.trigger(`ownStyleUpdate:property:${property}`, value);
+      em.trigger(`ownStyleUpdate:property`, property, value);
 
-      let isOwnEdited = target.get('isOwnEdited');
+      let isOwnEdited = component.get('isOwnEdited');
 
       if (isUndefined(isOwnEdited)) {
         if (component) {

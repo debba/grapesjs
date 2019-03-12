@@ -189,22 +189,6 @@
     }
   });
 
-  editor.on("ownStyleUpdate:property", (property, value, target) => {
-        console.log({
-          property,
-          value,
-          target
-        });
-        const model = editor.getSelected();
-        const style = model.parent().getStyle();
-        style[property] = value;
-        model.parent().setStyle(style);
-  });
-
-  editor.on("ownStyleFetch:property", (property, model) => {
-    model.set('newResult', '#fff' );
-  });
-
   editor.BlockManager.add("testBlock", {
     label: "Block",
     attributes: { class: "gjs-fonts gjs-f-b1" },
