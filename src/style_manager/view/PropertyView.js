@@ -296,7 +296,14 @@ module.exports = Backbone.View.extend({
       return result;
     }
 
-    result = target.getStyle()[model.get('property')];
+    if (
+      component &&
+      !isUndefined(component.getStyle()[model.get('property')])
+    ) {
+      result = component.getStyle()[model.get('property')];
+    } else {
+      result = target.getStyle()[model.get('property')];
+    }
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
@@ -420,6 +427,7 @@ module.exports = Backbone.View.extend({
       delete style[property];
     }
 
+    target.unset('isOwnEdited');
     if (!isUndefined(properStrategy) && properStrategy) {
       if (component) {
         component.trigger('ownStyleUpdate:property', property, value, target);
