@@ -22383,15 +22383,7 @@ module.exports = {
   modalTitle: 'Select Image',
 
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg',
-
-  // Template for using a custom assets template
-  useCustomAssetsTemplate: '',
-
-  // Hide File uploader, it could be useful to render a file upload button block
-  // in custom assets template and keeping upload logic using html elements in
-  // FileUploader view
-  hideFileUploader: 0
+  inputPlaceholder: 'http://path/to/the/image.jpg'
 };
 
 /***/ }),
@@ -22657,19 +22649,6 @@ module.exports = function () {
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
-    },
-
-
-    /**
-     *  Get assets element container
-     * @param {string} template
-     * @param {boolean} hideFileUploader
-     */
-    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
-      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (template !== '') c.useCustomAssetsTemplate = template;
-      c.hideFileUploader = hideFileUploader;
     },
 
 
@@ -23085,8 +23064,7 @@ module.exports = _backbone2.default.View.extend({
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-
-    return view.config.useCustomAssetsTemplate || '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
+    return '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -23246,9 +23224,6 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
-
-    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
-
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = this.ppfx + 'asset-manager';
     this.renderAssets();
@@ -27382,6 +27357,7 @@ exports.default = _backbone2.default.View.extend({
     var sender = options.sender || editor;
     var result = this.run(editor, sender, options);
     editor.trigger('run:' + id, result, options);
+    editor.trigger('run', id, result, options);
     return result;
   },
 
@@ -27400,6 +27376,7 @@ exports.default = _backbone2.default.View.extend({
     editor.trigger('stop:' + id + ':before', options);
     var result = this.stop(editor, sender, options);
     editor.trigger('stop:' + id, result, options);
+    editor.trigger('stop', id, result, options);
     return result;
   },
 
@@ -28902,46 +28879,42 @@ module.exports = {
 
 var _underscore = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
 
-var _underscore2 = _interopRequireDefault(_underscore);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 module.exports = {
   getPanels: function getPanels(editor) {
-    if (!this.panels) this.panels = editor.Panels.getPanelsEl();
+    if (!this.panels) {
+      this.panels = editor.Panels.getPanelsEl();
+    }
+
     return this.panels;
   },
-  tglPointers: function tglPointers(editor, v) {
-    var elP = editor.Canvas.getBody().querySelectorAll('.' + this.ppfx + 'no-pointer');
-    _underscore2.default.each(elP, function (item) {
-      item.style.pointerEvents = v ? '' : 'all';
+  tglPointers: function tglPointers(editor, val) {
+    var body = editor.Canvas.getBody();
+    var elP = body.querySelectorAll('.' + this.ppfx + 'no-pointer');
+    (0, _underscore.each)(elP, function (item) {
+      return item.style.pointerEvents = val ? '' : 'all';
     });
   },
   run: function run(editor, sender) {
-    if (sender && sender.set) sender.set('active', false);
+    this.sender = sender;
     editor.stopCommand('sw-visibility');
     editor.getModel().stopDefault();
-    var that = this;
     var panels = this.getPanels(editor);
     var canvas = editor.Canvas.getElement();
     var editorEl = editor.getEl();
     var pfx = editor.Config.stylePrefix;
+
     if (!this.helper) {
-      this.helper = document.createElement('span');
-      this.helper.className = pfx + 'off-prv fa fa-eye-slash';
-      editorEl.appendChild(this.helper);
-      this.helper.onclick = function () {
-        editor.stopCommand('preview');
+      var helper = document.createElement('span');
+      helper.className = pfx + 'off-prv fa fa-eye-slash';
+      editorEl.appendChild(helper);
+      helper.onclick = function () {
+        return editor.stopCommand('preview');
       };
+      this.helper = helper;
     }
+
     this.helper.style.display = 'inline-block';
     this.tglPointers(editor);
-
-    /*
-    editor.Canvas.getBody().querySelectorAll('.' + pfx + 'no-pointer').forEach(function(){
-      this.style.pointerEvents = 'all';
-    });*/
-
     panels.style.display = 'none';
     var canvasS = canvas.style;
     canvasS.width = '100%';
@@ -28950,19 +28923,25 @@ module.exports = {
     canvasS.left = '0';
     canvasS.padding = '0';
     canvasS.margin = '0';
-    editor.trigger('change:canvasOffset');
+    editor.refresh();
   },
-  stop: function stop(editor, sender) {
+  stop: function stop(editor) {
+    var _sender = this.sender,
+        sender = _sender === undefined ? {} : _sender;
+
+    sender.set && sender.set('active', 0);
     var panels = this.getPanels(editor);
     editor.runCommand('sw-visibility');
     editor.getModel().runDefault();
-    panels.style.display = 'block';
+    panels.style.display = '';
     var canvas = editor.Canvas.getElement();
     canvas.setAttribute('style', '');
+
     if (this.helper) {
       this.helper.style.display = 'none';
     }
-    editor.trigger('change:canvasOffset');
+
+    editor.refresh();
     this.tglPointers(editor, 1);
   }
 };
@@ -36146,6 +36125,7 @@ exports.default = {
     if ((0, _underscore.isString)(prop)) {
       prop = parseStyle(prop);
     }
+
     var propOrig = this.getStyle();
     var propNew = _extends({}, prop);
     this.set('style', propNew, opts);
@@ -37343,6 +37323,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * * `run:{commandName}:before` - Triggered before the command is called
                                                                                                                                                                                                                                                                    * * `stop:{commandName}:before` - Triggered before the command is called to stop
                                                                                                                                                                                                                                                                    * * `abort:{commandName}` - Triggered when the command execution is aborted (`editor.on(`run:preview:before`, opts => opts.abort = 1);`)
+                                                                                                                                                                                                                                                                   * * `run` - Triggered on run of any command. The id and the result are passed as arguments to the callback
+                                                                                                                                                                                                                                                                   * * `stop` - Triggered on stop of any command. The id and the result are passed as arguments to the callback
                                                                                                                                                                                                                                                                    * ### General
                                                                                                                                                                                                                                                                    * * `canvasScroll` - Canvas is scrolled
                                                                                                                                                                                                                                                                    * * `update` - The structure of the template is updated (its HTML/CSS)
@@ -38045,7 +38027,7 @@ var _underscore = __webpack_require__(/*! underscore */ "./node_modules/undersco
 
 var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
-var deps = [__webpack_require__(/*! utils */ "./src/utils/index.js"), __webpack_require__(/*! keymaps */ "./src/keymaps/index.js"), __webpack_require__(/*! undo_manager */ "./src/undo_manager/index.js"), __webpack_require__(/*! storage_manager */ "./src/storage_manager/index.js"), __webpack_require__(/*! device_manager */ "./src/device_manager/index.js"), __webpack_require__(/*! parser */ "./src/parser/index.js"), __webpack_require__(/*! style_manager */ "./src/style_manager/index.js"), __webpack_require__(/*! selector_manager */ "./src/selector_manager/index.js"), __webpack_require__(/*! modal_dialog */ "./src/modal_dialog/index.js"), __webpack_require__(/*! code_manager */ "./src/code_manager/index.js"), __webpack_require__(/*! panels */ "./src/panels/index.js"), __webpack_require__(/*! rich_text_editor */ "./src/rich_text_editor/index.js"), __webpack_require__(/*! asset_manager */ "./src/asset_manager/index.js"), __webpack_require__(/*! css_composer */ "./src/css_composer/index.js"), __webpack_require__(/*! trait_manager */ "./src/trait_manager/index.js"), __webpack_require__(/*! dom_components */ "./src/dom_components/index.js"), __webpack_require__(/*! navigator */ "./src/navigator/index.js"), __webpack_require__(/*! canvas */ "./src/canvas/index.js"), __webpack_require__(/*! commands */ "./src/commands/index.js"), __webpack_require__(/*! block_manager */ "./src/block_manager/index.js")];
+var deps = [__webpack_require__(/*! utils */ "./src/utils/index.js"), __webpack_require__(/*! keymaps */ "./src/keymaps/index.js"), __webpack_require__(/*! undo_manager */ "./src/undo_manager/index.js"), __webpack_require__(/*! storage_manager */ "./src/storage_manager/index.js"), __webpack_require__(/*! device_manager */ "./src/device_manager/index.js"), __webpack_require__(/*! parser */ "./src/parser/index.js"), __webpack_require__(/*! selector_manager */ "./src/selector_manager/index.js"), __webpack_require__(/*! style_manager */ "./src/style_manager/index.js"), __webpack_require__(/*! modal_dialog */ "./src/modal_dialog/index.js"), __webpack_require__(/*! code_manager */ "./src/code_manager/index.js"), __webpack_require__(/*! panels */ "./src/panels/index.js"), __webpack_require__(/*! rich_text_editor */ "./src/rich_text_editor/index.js"), __webpack_require__(/*! asset_manager */ "./src/asset_manager/index.js"), __webpack_require__(/*! css_composer */ "./src/css_composer/index.js"), __webpack_require__(/*! trait_manager */ "./src/trait_manager/index.js"), __webpack_require__(/*! dom_components */ "./src/dom_components/index.js"), __webpack_require__(/*! navigator */ "./src/navigator/index.js"), __webpack_require__(/*! canvas */ "./src/canvas/index.js"), __webpack_require__(/*! commands */ "./src/commands/index.js"), __webpack_require__(/*! block_manager */ "./src/block_manager/index.js")];
 
 var Backbone = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 var Collection = Backbone.Collection;
@@ -38911,7 +38893,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.62',
+    version: '0.14.56',
 
     /**
      * Initialize the editor with passed options
@@ -39272,6 +39254,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  * * [getTitle](#gettitle)
  * * [setContent](#setcontent)
  * * [getContent](#getcontent)
+ * * [onceClose](#onceclose)
+ * * [onceOpen](#onceopen)
  *
  * @module Modal
  */
@@ -39282,6 +39266,10 @@ module.exports = function () {
       ModalM = __webpack_require__(/*! ./model/Modal */ "./src/modal_dialog/model/Modal.js"),
       ModalView = __webpack_require__(/*! ./view/ModalView */ "./src/modal_dialog/view/ModalView.js");
   var model, modal;
+
+  var triggerEvent = function triggerEvent(enable, em) {
+    em && em.trigger('modal:' + (enable ? 'open' : 'close'));
+  };
 
   return {
     /**
@@ -39306,11 +39294,15 @@ module.exports = function () {
 
       c = _extends({}, defaults, config);
 
-      this.em = c.em;
+      var em = c.em;
+      this.em = em;
       var ppfx = c.pStylePrefix;
       if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
 
       model = new ModalM(c);
+      model.on('change:open', function (m, enb) {
+        return triggerEvent(enb, em);
+      });
       modal = new ModalView({
         model: model,
         config: c
@@ -39321,11 +39313,6 @@ module.exports = function () {
     postRender: function postRender(view) {
       var el = view.model.getConfig().el || view.el;
       this.render().appendTo(el);
-    },
-    triggerEvent: function triggerEvent(event) {
-      var em = this.em;
-
-      em && em.trigger('modal:' + event);
     },
 
 
@@ -39342,7 +39329,6 @@ module.exports = function () {
       opts.title && this.setTitle(opts.title);
       opts.content && this.setContent(opts.content);
       modal.show();
-      this.triggerEvent('open');
       return this;
     },
 
@@ -39353,7 +39339,30 @@ module.exports = function () {
      */
     close: function close() {
       modal.hide();
-      this.triggerEvent('close');
+      return this;
+    },
+
+
+    /**
+     * Execute callback when the modal will be closed.
+     * The callback will be called one only time
+     * @param {Function} clb
+     * @returns {this}
+     */
+    onceClose: function onceClose(clb) {
+      this.em.once('modal:close', clb);
+      return this;
+    },
+
+
+    /**
+     * Execute callback when the modal will be opened.
+     * The callback will be called one only time
+     * @param {Function} clb
+     * @returns {this}
+     */
+    onceOpen: function onceOpen(clb) {
+      this.em.once('modal:open', clb);
       return this;
     },
 
@@ -40411,21 +40420,25 @@ module.exports = {
       className: 'fa fa-paint-brush',
       command: osm,
       active: true,
+      togglable: 0,
       attributes: { title: 'Open Style Manager' }
     }, {
       id: otm,
       className: 'fa fa-cog',
       command: otm,
+      togglable: 0,
       attributes: { title: 'Settings' }
     }, {
       id: ola,
       className: 'fa fa-bars',
       command: ola,
+      togglable: 0,
       attributes: { title: 'Open Layer Manager' }
     }, {
       id: obl,
       className: 'fa fa-th-large',
       command: obl,
+      togglable: 0,
       attributes: { title: 'Open Blocks' }
     }]
   }],
@@ -40677,7 +40690,7 @@ module.exports = function () {
     active: function active() {
       this.getPanels().each(function (p) {
         p.get('buttons').each(function (btn) {
-          if (btn.get('active')) btn.trigger('updateActive');
+          btn.get('active') && btn.trigger('updateActive');
         });
       });
     },
@@ -40782,12 +40795,12 @@ module.exports = Backbone.Collection.extend({
    *
    * @return  void
    * */
-  deactivateAll: function deactivateAll(ctx) {
+  deactivateAll: function deactivateAll(ctx, sender) {
     var context = ctx || '';
-    this.forEach(function (model, index) {
-      if (model.get('context') == context) {
-        model.set('active', false);
-        if (model.get('buttons').length) model.get('buttons').deactivateAll(context);
+    this.forEach(function (model) {
+      if (model.get('context') == context && model !== sender) {
+        model.set('active', false, { silent: 1 });
+        model.trigger('updateActive', { fromCollection: 1 });
       }
     });
   },
@@ -40804,7 +40817,6 @@ module.exports = Backbone.Collection.extend({
     this.forEach(function (model, index) {
       if (model.get('context') == context) {
         model.set('disable', true);
-        if (model.get('buttons').length) model.get('buttons').disableAllButtons(context);
       }
     });
   },
@@ -40981,36 +40993,36 @@ module.exports = _backbone2.default.View.extend({
    * @return   void
    * */
   updateActive: function updateActive() {
+    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var model = this.model,
         commands = this.commands,
-        em = this.em;
+        $el = this.$el,
+        activeCls = this.activeCls;
+    var fromCollection = opts.fromCollection;
 
     var context = model.get('context');
     var options = model.get('options');
-    var command = {};
-    var editor = em && em.get ? em.get('Editor') : null;
     var commandName = model.get('command');
-    var cmdIsFunc = (0, _underscore.isFunction)(commandName);
+    var command = {};
 
     if (commands && (0, _underscore.isString)(commandName)) {
       command = commands.get(commandName) || {};
-    } else if (cmdIsFunc) {
+    } else if ((0, _underscore.isFunction)(commandName)) {
       command = commands.create({ run: commandName });
     } else if (commandName !== null && (0, _underscore.isObject)(commandName)) {
       command = commands.create(commandName);
     }
 
     if (model.get('active')) {
-      model.collection.deactivateAll(context);
+      !fromCollection && model.collection.deactivateAll(context, model);
       model.set('active', true, { silent: true }).trigger('checkActive');
       commands.runCommand(command, _extends({}, options, { sender: model }));
 
       // Disable button if the command has no stop method
       command.noStop && model.set('active', false);
     } else {
-      this.$el.removeClass(this.activeCls);
-      model.collection.deactivateAll(context);
-      commands.stopCommand(command, _extends({}, options, { sender: model }));
+      $el.removeClass(activeCls);
+      commands.stopCommand(command, _extends({}, options, { sender: model, force: 1 }));
     }
   },
   updateDisable: function updateDisable() {
@@ -48161,12 +48173,6 @@ module.exports = _backbone2.default.View.extend({
     var result;
     var model = this.model;
     var target = this.getTargetModel();
-
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
-    var property = model.get('property');
-    var component = em && em.getSelected();
-
     var customFetchValue = this.customValue;
 
     if (!target) {
@@ -48177,23 +48183,6 @@ module.exports = _backbone2.default.View.extend({
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
-    }
-
-    if (component) {
-      component.unset('newResult', { silent: true });
-    }
-
-    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleFetch:property', property, result);
-        component.trigger('ownStyleFetch:property:' + property, result);
-        em.trigger('ownStyleFetch:property:' + property, result);
-        em.trigger('ownStyleFetch:property', property, result);
-
-        var newResult = component.get('newResult');
-
-        if (!(0, _underscore.isUndefined)(newResult)) result = newResult;
-      }
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -48296,11 +48285,8 @@ module.exports = _backbone2.default.View.extend({
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     var property = name || this.model.get('property');
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
     var target = this.getTarget();
     var style = target.getStyle();
-    var component = em && em.getSelected();
 
     if (value) {
       style[property] = value;
@@ -48308,21 +48294,7 @@ module.exports = _backbone2.default.View.extend({
       delete style[property];
     }
 
-    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleUpdate:property', property, value);
-        component.trigger('ownStyleUpdate:property:' + property, value);
-      }
-
-      em.trigger('ownStyleUpdate:property:' + property, value);
-      em.trigger('ownStyleUpdate:property', property, value);
-
-      var isOwnEdited = component.get('isOwnEdited');
-
-      if ((0, _underscore.isUndefined)(isOwnEdited)) target.setStyle(style, opts);
-    } else {
-      target.setStyle(style, opts);
-    }
+    target.setStyle(style, opts);
 
     // Helper is used by `states` like ':hover' to show its preview
     var helper = this.getHelperModel();
