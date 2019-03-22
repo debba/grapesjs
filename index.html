@@ -16,7 +16,7 @@
 
 <body>
 <div id="gjs" style="height:0px; overflow:hidden;">
-    <div class="panel" style="background-color:red;">
+    <div class="panel">
         <h1 class="welcome">Welcome to</h1>
         <div class="big-title">
             <svg class="logo" viewBox="0 0 100 100">
@@ -29,6 +29,9 @@
             copy and rename it to _index.html, on next server start the new file will be served, and it will be ignored
             by git.
         </div>
+
+        <div class="description" style="background-color:red;">prova prova</div>
+
     </div>
     <style>
         .panel {
@@ -70,12 +73,6 @@
             margin: 15px 0;
         }
 
-        .description {
-            text-align: justify;
-            font-size: 1rem;
-            line-height: 1.5rem;
-        }
-
     </style>
 </div>
 
@@ -88,7 +85,7 @@
     fromElement: true,
     storageManager: { autoload: 0 },
     forceClass: false,
-    avoidInlineStyle: true,
+    avoidInlineStyle: false,
     blockManager: {
       blocks: [
         {

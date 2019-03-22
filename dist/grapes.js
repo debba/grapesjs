@@ -38911,7 +38911,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.61',
+    version: '0.14.62',
 
     /**
      * Initialize the editor with passed options
@@ -48302,8 +48302,6 @@ module.exports = _backbone2.default.View.extend({
     var style = target.getStyle();
     var component = em && em.getSelected();
 
-    component && component.unset('isOwnEdited');
-
     if (value) {
       style[property] = value;
     } else {
@@ -48319,19 +48317,11 @@ module.exports = _backbone2.default.View.extend({
       em.trigger('ownStyleUpdate:property:' + property, value);
       em.trigger('ownStyleUpdate:property', property, value);
 
-      var isOwnEdited = component && component.get('isOwnEdited');
+      var isOwnEdited = component.get('isOwnEdited');
 
-      if ((0, _underscore.isUndefined)(isOwnEdited)) {
-        if (component) {
-          component.setStyle(style, opts);
-        } else target.setStyle(style, opts);
-      }
+      if ((0, _underscore.isUndefined)(isOwnEdited)) target.setStyle(style, opts);
     } else {
-      if (component) {
-        component.setStyle(style, opts);
-      } else {
-        target.setStyle(style, opts);
-      }
+      target.setStyle(style, opts);
     }
 
     // Helper is used by `states` like ':hover' to show its preview
