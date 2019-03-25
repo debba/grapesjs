@@ -38921,7 +38921,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.57',
+    version: '0.14.58',
 
     /**
      * Initialize the editor with passed options
@@ -48223,21 +48223,19 @@ module.exports = _backbone2.default.View.extend({
       result = model.getDefaultValue();
     }
 
-    if (component) {
-      component.unset('newResult', { silent: true });
-    }
+    model.unset('newResult', { silent: true });
 
     if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
       if (component) {
-        component.trigger('ownStyleFetch:property', property, result);
-        component.trigger('ownStyleFetch:property:' + property, result);
-        em.trigger('ownStyleFetch:property:' + property, result);
-        em.trigger('ownStyleFetch:property', property, result);
-
-        var newResult = component.get('newResult');
-
-        if (!(0, _underscore.isUndefined)(newResult)) result = newResult;
+        component.trigger('ownStyleFetch:property', property, model, result);
+        component.trigger('ownStyleFetch:property:' + property, model, result);
       }
+      em.trigger('ownStyleFetch:property:' + property, model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+
+      var newResult = model.get('newResult');
+
+      if (!(0, _underscore.isUndefined)(newResult)) result = newResult;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -48346,8 +48344,6 @@ module.exports = _backbone2.default.View.extend({
     var style = target.getStyle();
     var component = em && em.getSelected();
 
-    if (component) style = component.getStyle();
-
     if (value) {
       style[property] = value;
     } else {
@@ -48357,18 +48353,26 @@ module.exports = _backbone2.default.View.extend({
     target.unset('isOwnEdited');
     if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
       if (component) {
-        component.trigger('ownStyleUpdate:property', property, value);
-        component.trigger('ownStyleUpdate:property:' + property, value);
+        component.trigger('ownStyleUpdate:property', property, value, target);
+        component.trigger('ownStyleUpdate:property:' + property, value, target);
       }
 
-      em.trigger('ownStyleUpdate:property:' + property, value);
-      em.trigger('ownStyleUpdate:property', property, value);
+      em.trigger('ownStyleUpdate:property:' + property, value, target);
+      em.trigger('ownStyleUpdate:property', property, value, target);
 
-      var isOwnEdited = component.get('isOwnEdited');
+      var isOwnEdited = target.get('isOwnEdited');
 
-      if ((0, _underscore.isUndefined)(isOwnEdited)) target.setStyle(style, opts);
+      if ((0, _underscore.isUndefined)(isOwnEdited)) {
+        if (component) {
+          component.setStyle(style, opts);
+        } else target.setStyle(style, opts);
+      }
     } else {
-      target.setStyle(style, opts);
+      if (component) {
+        component.setStyle(style, opts);
+      } else {
+        target.setStyle(style, opts);
+      }
     }
 
     // Helper is used by `states` like ':hover' to show its preview
