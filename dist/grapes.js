@@ -38921,7 +38921,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.58',
+    version: '0.14.62',
 
     /**
      * Initialize the editor with passed options
@@ -48344,6 +48344,8 @@ module.exports = _backbone2.default.View.extend({
     var style = target.getStyle();
     var component = em && em.getSelected();
 
+    if (component) style = component.getStyle();
+
     if (value) {
       style[property] = value;
     } else {
@@ -53657,6 +53659,15 @@ module.exports = _backbone2.default.View.extend({
    */
   closest: function closest(el, selector) {
     if (!el) return;
+
+    /**
+     * [Fix in case of empty block]
+     * check before the block and
+     * after that, all of parentNodes
+     */
+
+    if (selector !== "*" && this.matches(el, selector)) return el;
+
     var elem = el.parentNode;
     while (elem && elem.nodeType === 1) {
       if (this.matches(elem, selector)) return elem;

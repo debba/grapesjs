@@ -210,6 +210,15 @@ module.exports = Backbone.View.extend({
    */
   closest(el, selector) {
     if (!el) return;
+
+    /**
+     * [Fix in case of empty block]
+     * check before the block and
+     * after that, all of parentNodes
+     */
+
+    if (selector !== '*' && this.matches(el, selector)) return el;
+
     var elem = el.parentNode;
     while (elem && elem.nodeType === 1) {
       if (this.matches(elem, selector)) return elem;

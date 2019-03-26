@@ -418,8 +418,10 @@ module.exports = Backbone.View.extend({
     const properStrategy = this.model.get('useOwnStrategy');
     const em = this.em;
     const target = this.getTarget();
-    const style = target.getStyle();
+    let style = target.getStyle();
     const component = em && em.getSelected();
+
+    if (component) style = component.getStyle();
 
     if (value) {
       style[property] = value;
