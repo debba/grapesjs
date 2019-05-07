@@ -303,6 +303,19 @@ module.exports = () => {
     },
 
     /**
+     * Get canvas rectangular data
+     * @returns {Object}
+     */
+    getRect() {
+      const { top, left } = CanvasView.getPosition();
+      return {
+        ...CanvasView.getCanvasOffset(),
+        topScroll: top,
+        leftScroll: left
+      };
+    },
+
+    /**
      * This method comes handy when you need to attach something like toolbars
      * to elements inside the canvas, dealing with all relative position,
      * offsets, etc. and returning as result the object with positions which are
@@ -445,9 +458,14 @@ module.exports = () => {
     scrollTo(el, opts = {}) {
       const elem = getElement(el);
       const cv = this.getCanvasView();
+      if (!elem) return;
 
       if (!cv.isElInViewport(elem) || opts.force) {
-        elem.scrollIntoView(opts);
+        const opt =
+          typeof opts === 'object'
+            ? opts
+            : { behavior: 'smooth', block: 'nearest' };
+        elem.scrollIntoView(opt);
       }
     },
 

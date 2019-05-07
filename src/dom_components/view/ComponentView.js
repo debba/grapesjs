@@ -236,11 +236,14 @@ module.exports = Backbone.View.extend({
   updateAttributes() {
     const attrs = [];
     const { model, $el, el } = this;
-    const defaultAttr = { 'data-gjs-type': model.get('type') || 'default' };
-
-    if (model.get('highlightable')) {
-      defaultAttr['data-highlightable'] = 1;
-    }
+    const defaultAttr = {
+      'data-gjs-type': model.get('type') || 'default',
+      ...(model.get('highlightable') && { 'data-highlightable': 1 }),
+      ...(model.get('textable') && {
+        contenteditable: 'false',
+        'data-gjs-textable': 'true'
+      })
+    };
 
     // Remove all current attributes
     each(el.attributes, attr => attrs.push(attr.nodeName));
@@ -279,15 +282,13 @@ module.exports = Backbone.View.extend({
    * @private
    */
   updateScript() {
-    if (!this.model.get('script')) {
-      return;
-    }
-
-    var em = this.em;
-    if (em) {
-      var canvas = em.get('Canvas');
-      canvas.getCanvasView().updateScript(this);
-    }
+    const { model, em } = this;
+    if (!model.get('script')) return;
+    em &&
+      em
+        .get('Canvas')
+        .getCanvasView()
+        .updateScript(this);
   },
 
   /**
@@ -354,6 +355,7 @@ module.exports = Backbone.View.extend({
   },
 
   render() {
+    if (this.modelOpt.temporary) return this;
     this.renderAttributes();
     this.renderChildren();
     this.updateScript();

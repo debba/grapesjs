@@ -1,5 +1,12 @@
 import Backbone from 'backbone';
-import { on, off, getElement, getKeyChar } from 'utils/mixins';
+import {
+  on,
+  off,
+  getElement,
+  getKeyChar,
+  isTextNode,
+  getElRect
+} from 'utils/mixins';
 const FrameView = require('./FrameView');
 const $ = Backbone.$;
 let timerZoom;
@@ -73,7 +80,7 @@ module.exports = Backbone.View.extend({
     }
   },
 
-  updateFrames() {
+  updateFrames(ev) {
     const { em, model } = this;
     const { x, y } = model.attributes;
     const zoom = this.getZoom();
@@ -84,6 +91,7 @@ module.exports = Backbone.View.extend({
     this.clearOff();
     this.onFrameScroll();
     em.stopDefault(defOpts);
+    em.trigger('canvas:update', ev);
     timerZoom && clearTimeout(timerZoom);
     timerZoom = setTimeout(() => em.runDefault(defOpts));
   },
@@ -98,7 +106,7 @@ module.exports = Backbone.View.extend({
    * @return {Boolean}
    */
   isElInViewport(el) {
-    const rect = getElement(el).getBoundingClientRect();
+    const rect = getElRect(getElement(el));
     const frameRect = this.getFrameOffset();
     const rTop = rect.top;
     const rLeft = rect.left;
@@ -245,6 +253,12 @@ module.exports = Backbone.View.extend({
       this.frame.el.contentWindow.onscroll = this.onFrameScroll;
       this.frame.udpateOffset();
 
+      // Avoid the default link behaviour in the canvas
+      body.on(
+        'click',
+        ev => ev && ev.target.tagName == 'A' && ev.preventDefault()
+      );
+
       // When the iframe is focused the event dispatcher is not the same so
       // I need to delegate all events to the parent document
       const doc = document;
@@ -293,7 +307,7 @@ module.exports = Backbone.View.extend({
    * @return {Object}
    */
   offset(el) {
-    var rect = el.getBoundingClientRect();
+    var rect = getElRect(el);
     var docBody = el.ownerDocument.body;
     return {
       top: rect.top + docBody.scrollTop,
@@ -353,7 +367,7 @@ module.exports = Backbone.View.extend({
     const height = eo.height * zoom;
     const width = eo.width * zoom;
 
-    return { top, left, height, width };
+    return { top, left, height, width, zoom, rect: eo };
   },
 
   /**
@@ -363,6 +377,7 @@ module.exports = Backbone.View.extend({
    * @private
    */
   getElementOffsets(el) {
+    if (!el || isTextNode(el)) return {};
     const result = {};
     const styles = window.getComputedStyle(el);
     [
@@ -406,13 +421,14 @@ module.exports = Backbone.View.extend({
    * @private
    */
   updateScript(view) {
+    const model = view.model;
+    const id = model.getId();
+
     if (!view.scriptContainer) {
-      view.scriptContainer = $('<div>');
+      view.scriptContainer = $(`<div id="${id}">`);
       this.getJsContainer().appendChild(view.scriptContainer.get(0));
     }
 
-    const model = view.model;
-    const id = model.getId();
     view.el.id = id;
     view.scriptContainer.html('');
     // In editor, I make use of setTimeout as during the append process of elements
