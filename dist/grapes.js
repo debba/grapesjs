@@ -22383,7 +22383,15 @@ module.exports = {
   modalTitle: 'Select Image',
 
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg'
+  inputPlaceholder: 'http://path/to/the/image.jpg',
+
+  // Template for using a custom assets template
+  useCustomAssetsTemplate: '',
+
+  // Hide File uploader, it could be useful to render a file upload button block
+  // in custom assets template and keeping upload logic using html elements in
+  // FileUploader view
+  hideFileUploader: 0
 };
 
 /***/ }),
@@ -22649,6 +22657,19 @@ module.exports = function () {
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
+    },
+
+
+    /**
+     *  Get assets element container
+     * @param {string} template
+     * @param {boolean} hideFileUploader
+     */
+    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
+      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (template !== '') c.useCustomAssetsTemplate = template;
+      c.hideFileUploader = hideFileUploader;
     },
 
 
@@ -23064,7 +23085,8 @@ module.exports = _backbone2.default.View.extend({
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-    return '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
+
+    return view.config.useCustomAssetsTemplate || '\n    <div class="' + pfx + 'assets-cont">\n      <div class="' + pfx + 'assets-header">\n        <form class="' + pfx + 'add-asset">\n          <div class="' + ppfx + 'field ' + pfx + 'add-field">\n            <input placeholder="' + view.config.inputPlaceholder + '"/>\n          </div>\n          <button class="' + ppfx + 'btn-prim">' + view.config.addBtnText + '</button>\n          <div style="clear:both"></div>\n        </form>\n      </div>\n      <div class="' + pfx + 'assets" data-el="assets"></div>\n      <div style="clear:both"></div>\n    </div>\n    ';
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -23224,6 +23246,9 @@ module.exports = _backbone2.default.View.extend({
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
+
+    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
+
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = this.ppfx + 'asset-manager';
     this.renderAssets();
@@ -25592,7 +25617,7 @@ module.exports = _backbone2.default.View.extend({
       // `body {height: 100%;}`.
       // For the moment I give the priority to Firefox as it might be
       // CKEditor's issue
-      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 100px;\n          width: 100px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (conf.protectedCss || '') + '\n      ';
+      var frameCss = '\n        ' + (em.config.baseCss || '') + '\n\n        .' + ppfx + 'dashed *[data-highlightable] {\n          outline: 1px dashed rgba(170,170,170,0.7);\n          outline-offset: -2px;\n        }\n\n        .' + ppfx + 'comp-selected {\n          outline: 3px solid #3b97e3 !important;\n          outline-offset: -3px;\n        }\n\n        .' + ppfx + 'comp-selected-parent {\n          outline: 2px solid ' + colorWarn + ' !important\n        }\n\n        .' + ppfx + 'no-select {\n          user-select: none;\n          -webkit-user-select:none;\n          -moz-user-select: none;\n        }\n\n        .' + ppfx + 'freezed {\n          opacity: 0.5;\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'no-pointer {\n          pointer-events: none;\n        }\n\n        .' + ppfx + 'plh-image {\n          background: #f5f5f5;\n          border: none;\n          height: 100px;\n          width: 100px;\n          display: block;\n          outline: 3px solid #ffca6f;\n          cursor: pointer;\n          outline-offset: -2px\n        }\n\n        .' + ppfx + 'grabbing {\n          cursor: grabbing;\n          cursor: -webkit-grabbing;\n        }\n\n        .' + ppfx + 'is__grabbing {\n          overflow-x: hidden;\n        }\n\n        .' + ppfx + 'is__grabbing,\n        .' + ppfx + 'is__grabbing * {\n          cursor: grabbing !important;\n        }\n\n        ' + (conf.canvasCss || '') + '\n        ' + (conf.protectedCss || '') + '\n      ';
 
       if (externalStyles) {
         head.append(externalStyles);
@@ -26891,6 +26916,9 @@ module.exports = function () {
             return em.stopDefault(defComOptions);
           };
 
+          // Dirty patch to prevent parent selection on drop (in absolute mode)
+          em.set('_cmpDrag', 1);
+
           if (!sel || !sel.get('draggable')) {
             console.warn('The element is not draggable');
             return;
@@ -27681,12 +27709,9 @@ module.exports = {
         mode = opts.mode,
         _opts$dragger = opts.dragger,
         dragger = _opts$dragger === undefined ? {} : _opts$dragger;
-    var Canvas = editor.Canvas;
 
     var el = target.getEl();
-    var scale = Canvas.getZoomMultiplier();
     var config = _extends({
-      scale: scale,
       doc: el.ownerDocument,
       onStart: this.onStart,
       onEnd: this.onEnd,
@@ -28142,17 +28167,19 @@ module.exports = {
       }
     });
   },
-  toggleDrag: function toggleDrag(on) {
+  toggleDrag: function toggleDrag(enable) {
     var ppfx = this.ppfx,
         editor = this.editor;
 
-    var methodCls = on ? 'add' : 'remove';
-    var canvas = this.getCanvas();
+    var methodCls = enable ? 'add' : 'remove';
     var classes = [ppfx + 'is__grabbing'];
+    var Canvas = editor.Canvas;
+
+    var body = Canvas.getBody();
     classes.forEach(function (cls) {
-      return canvas.classList[methodCls](cls);
+      return body.classList[methodCls](cls);
     });
-    editor.Canvas[on ? 'startAutoscroll' : 'stopAutoscroll']();
+    Canvas[enable ? 'startAutoscroll' : 'stopAutoscroll']();
   }
 };
 
@@ -29486,7 +29513,10 @@ module.exports = {
    * @private
    */
   onClick: function onClick(e) {
+    var em = this.em;
+
     e.stopPropagation();
+    if (em.get('_cmpDrag')) return em.set('_cmpDrag');
     var $el = $(e.target);
     var model = $el.data('model');
 
@@ -36669,7 +36699,6 @@ exports.default = {
     if ((0, _underscore.isString)(prop)) {
       prop = parseStyle(prop);
     }
-
     var propOrig = this.getStyle();
     var propNew = _extends({}, prop);
     this.set('style', propNew, opts);
@@ -38655,6 +38684,9 @@ module.exports = Backbone.Model.extend({
       });
     });
   },
+  getContainer: function getContainer() {
+    return this.config.el;
+  },
   listenLog: function listenLog(event) {
     this.listenTo(this, 'log:' + event, logs[event]);
   },
@@ -39453,7 +39485,7 @@ module.exports = function () {
     plugins: plugins,
 
     // Will be replaced on build
-    version: '0.14.63',
+    version: '0.14.64',
 
     /**
      * Initialize the editor with passed options
@@ -42987,7 +43019,7 @@ module.exports = function () {
      * @example
      * rte.add('bold', {
      *   icon: '<b>B</b>',
-     *   attributes: {title: 'Bold',}
+     *   attributes: {title: 'Bold'},
      *   result: rte => rte.exec('bold')
      * });
      * rte.add('link', {
@@ -43087,7 +43119,7 @@ module.exports = function () {
      * Triggered when the offset of the editor is changed
      * @private
      */
-    udpatePosition: function udpatePosition() {
+    updatePosition: function updatePosition() {
       var un = 'px';
       var canvas = config.em.get('Canvas');
       var pos = canvas.getTargetToElementDim(toolbar, lastEl, {
@@ -43126,10 +43158,10 @@ module.exports = function () {
       rte = customRte ? customRte.enable(el, rte) : this.initRte(el).enable();
 
       if (em) {
-        setTimeout(this.udpatePosition.bind(this), 0);
+        setTimeout(this.updatePosition.bind(this), 0);
         var event = 'change:canvasOffset canvasScroll';
-        em.off(event, this.udpatePosition, this);
-        em.on(event, this.udpatePosition, this);
+        em.off(event, this.updatePosition, this);
+        em.on(event, this.updatePosition, this);
         em.trigger('rte:enable', view, rte);
       }
 
@@ -48769,16 +48801,41 @@ module.exports = _backbone2.default.View.extend({
     var result;
     var model = this.model;
     var target = this.getTargetModel();
+
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
+    var property = model.get('property');
+    var component = em && em.getSelected();
+
     var customFetchValue = this.customValue;
 
     if (!target) {
       return result;
     }
 
-    result = target.getStyle()[model.get('property')];
+    if (component && !(0, _underscore.isUndefined)(component.getStyle()[model.get('property')])) {
+      result = component.getStyle()[model.get('property')];
+    } else {
+      result = target.getStyle()[model.get('property')];
+    }
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
+    }
+
+    model.unset('newResult', { silent: true });
+
+    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleFetch:property', property, model, result);
+        component.trigger('ownStyleFetch:property:' + property, model, result);
+      }
+      em.trigger('ownStyleFetch:property:' + property, model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+
+      var newResult = model.get('newResult');
+
+      if (!(0, _underscore.isUndefined)(newResult)) result = newResult;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -48881,8 +48938,13 @@ module.exports = _backbone2.default.View.extend({
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     var property = name || this.model.get('property');
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
     var target = this.getTarget();
     var style = target.getStyle();
+    var component = em && em.getSelected();
+
+    if (component) style = component.getStyle();
 
     if (value) {
       style[property] = value;
@@ -48890,7 +48952,30 @@ module.exports = _backbone2.default.View.extend({
       delete style[property];
     }
 
-    target.setStyle(style, opts);
+    target.unset('isOwnEdited');
+    if (!(0, _underscore.isUndefined)(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleUpdate:property', property, value, target);
+        component.trigger('ownStyleUpdate:property:' + property, value, target);
+      }
+
+      em.trigger('ownStyleUpdate:property:' + property, value, target);
+      em.trigger('ownStyleUpdate:property', property, value, target);
+
+      var isOwnEdited = target.get('isOwnEdited');
+
+      if ((0, _underscore.isUndefined)(isOwnEdited)) {
+        if (component) {
+          component.setStyle(style, opts);
+        } else target.setStyle(style, opts);
+      }
+    } else {
+      if (component) {
+        component.setStyle(style, opts);
+      } else {
+        target.setStyle(style, opts);
+      }
+    }
 
     // Helper is used by `states` like ':hover' to show its preview
     var helper = this.getHelperModel();
@@ -52909,6 +52994,10 @@ var _mixins = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var resetPos = function resetPos() {
+  return { x: 0, y: 0 };
+};
+
 var Dragger = function () {
   /**
    * Init the dragger
@@ -52973,9 +53062,9 @@ var Dragger = function () {
       // Scale result points, can also be a function
       scale: 1
     };
-    (0, _underscore.bindAll)(this, 'drag', 'stop', 'keyHandle');
+    (0, _underscore.bindAll)(this, 'drag', 'stop', 'keyHandle', 'handleScroll');
     this.setOptions(opts);
-    this.delta = { x: 0, y: 0 };
+    this.delta = resetPos();
     return this;
   }
 
@@ -52997,11 +53086,27 @@ var Dragger = function () {
     value: function toggleDrag(enable) {
       var docs = this.getDocumentEl();
       var container = this.getContainerEl();
+      var win = this.getWindowEl();
       var method = enable ? 'on' : 'off';
       var methods = { on: _mixins.on, off: _mixins.off };
       methods[method](container, 'mousemove dragover', this.drag);
       methods[method](docs, 'mouseup dragend touchend', this.stop);
       methods[method](docs, 'keydown', this.keyHandle);
+      methods[method](win, 'scroll', this.handleScroll);
+    }
+  }, {
+    key: 'handleScroll',
+    value: function handleScroll() {
+      var lastScroll = this.lastScroll,
+          delta = this.delta;
+
+      var actualScroll = this.getScrollInfo();
+      var scrollDiff = {
+        x: actualScroll.x - lastScroll.x,
+        y: actualScroll.y - lastScroll.y
+      };
+      this.move(delta.x + scrollDiff.x, delta.y + scrollDiff.y);
+      this.lastScrollDiff = scrollDiff;
     }
 
     /**
@@ -53021,6 +53126,8 @@ var Dragger = function () {
       this.guidesTarget = (0, _underscore.result)(opts, 'guidesTarget') || [];
       (0, _underscore.isFunction)(onStart) && onStart(ev, this);
       this.startPosition = this.getStartPosition();
+      this.lastScrollDiff = resetPos();
+      this.globScrollDiff = resetPos();
       this.drag(ev);
     }
 
@@ -53034,15 +53141,23 @@ var Dragger = function () {
     value: function drag(ev) {
       var _this = this;
 
-      var opts = this.opts;
+      var opts = this.opts,
+          lastScrollDiff = this.lastScrollDiff,
+          globScrollDiff = this.globScrollDiff;
       var onDrag = opts.onDrag;
       var startPointer = this.startPointer;
 
       var currentPos = this.getPointerPos(ev);
-      var delta = {
-        x: currentPos.x - startPointer.x,
-        y: currentPos.y - startPointer.y
+      var glDiff = {
+        x: globScrollDiff.x + lastScrollDiff.x,
+        y: globScrollDiff.y + lastScrollDiff.y
       };
+      this.globScrollDiff = glDiff;
+      var delta = {
+        x: currentPos.x - startPointer.x + glDiff.x,
+        y: currentPos.y - startPointer.y + glDiff.y
+      };
+      this.lastScrollDiff = resetPos();
       var lockedAxis = this.lockedAxis;
 
       // Lock one axis
@@ -53070,6 +53185,7 @@ var Dragger = function () {
       var deltaPre = _extends({}, delta);
       this.currentPointer = currentPos;
       this.lockedAxis = lockedAxis;
+      this.lastScroll = this.getScrollInfo();
       moveDelta(delta);
 
       if (this.guidesTarget.length) {
@@ -53239,6 +53355,15 @@ var Dragger = function () {
 
       return container ? [container] : this.getDocumentEl();
     }
+  }, {
+    key: 'getWindowEl',
+    value: function getWindowEl() {
+      var cont = this.getContainerEl();
+      return cont.map(function (item) {
+        var doc = item.ownerDocument || item;
+        return doc.defaultView || doc.parentWindow;
+      });
+    }
 
     /**
      * Returns documents
@@ -53271,9 +53396,11 @@ var Dragger = function () {
     key: 'getPointerPos',
     value: function getPointerPos(ev) {
       var getPos = this.opts.getPointerPosition;
+      var pEv = (0, _mixins.getPointerEvent)(ev);
+
       return getPos ? getPos(ev) : {
-        x: ev.clientX,
-        y: ev.clientY
+        x: pEv.clientX,
+        y: pEv.clientY
       };
     }
   }, {
@@ -53283,7 +53410,7 @@ var Dragger = function () {
           opts = this.opts;
 
       var getPos = opts.getPosition;
-      var result = { x: 0, y: 0 };
+      var result = resetPos();
 
       if ((0, _underscore.isFunction)(getPos)) {
         result = getPos();
@@ -53295,6 +53422,18 @@ var Dragger = function () {
       }
 
       return result;
+    }
+  }, {
+    key: 'getScrollInfo',
+    value: function getScrollInfo() {
+      var doc = this.opts.doc;
+
+      var body = doc && doc.body;
+
+      return {
+        y: body ? body.scrollTop : 0,
+        x: body ? body.scrollLeft : 0
+      };
     }
   }, {
     key: 'detectAxisLock',
@@ -54394,6 +54533,15 @@ module.exports = _backbone2.default.View.extend({
    */
   closest: function closest(el, selector) {
     if (!el) return;
+
+    /**
+     * [Fix in case of empty block]
+     * check before the block and
+     * after that, all of parentNodes
+     */
+
+    if (selector !== '*' && this.matches(el, selector)) return el;
+
     var elem = el.parentNode;
     while (elem && elem.nodeType === 1) {
       if (this.matches(elem, selector)) return elem;
