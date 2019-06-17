@@ -1,5 +1,5 @@
 import { bindAll, isElement, isUndefined } from 'underscore';
-import { on, off, getUnitFromValue, isTextNode } from 'utils/mixins';
+import { on, off, getUnitFromValue, isTaggableNode } from 'utils/mixins';
 
 const ToolbarView = require('dom_components/view/ToolbarView');
 const Toolbar = require('dom_components/model/Toolbar');
@@ -176,7 +176,9 @@ module.exports = {
    * @private
    */
   onClick(e) {
+    const { em } = this;
     e.stopPropagation();
+    if (em.get('_cmpDrag')) return em.set('_cmpDrag');
     const $el = $(e.target);
     let model = $el.data('model');
 
@@ -268,12 +270,18 @@ module.exports = {
     var $el = $(el);
     var canvas = this.canvas;
     var config = canvas.getConfig();
+    const ppfx = config.pStylePrefix || '';
     var customeLabel = config.customBadgeLabel;
     this.cacheEl = el;
     var model = $el.data('model');
     if (!model || !model.get('badgable')) return;
     var badge = this.getBadge();
-    var badgeLabel = model.getIcon() + model.getName();
+    const icon = model.getIcon();
+    const clsBadge = `${ppfx}badge`;
+    let badgeLabel = `${
+      icon ? `<div class="${clsBadge}__icon">${icon}</div>` : ''
+    }
+      <div class="${clsBadge}__name">${model.getName()}</div>`;
     badgeLabel = customeLabel ? customeLabel(model) : badgeLabel;
     badge.innerHTML = badgeLabel;
     var bStyle = badge.style;
@@ -355,10 +363,9 @@ module.exports = {
     const editor = em ? em.get('Editor') : '';
     const config = em ? em.get('Config') : '';
     const pfx = config.stylePrefix || '';
-    const attrName = `data-${pfx}handler`;
     const resizeClass = `${pfx}resizing`;
     const model =
-      !isElement(elem) && !isTextNode(elem) ? elem : em.getSelected();
+      !isElement(elem) && isTaggableNode(elem) ? elem : em.getSelected();
     const resizable = model.get('resizable');
     const el = isElement(elem) ? elem : model.getEl();
     let options = {};
@@ -556,14 +563,17 @@ module.exports = {
         pos.top = pos.elementTop + pos.elementHeight;
       }
 
-      // Check if not outside of the canvas
-      if (pos.left < pos.canvasLeft) {
-        pos.left = pos.canvasLeft;
+      // Check left position of the toolbar
+      const elRight = pos.elementLeft + pos.elementWidth;
+      let left = elRight - pos.targetWidth;
+
+      if (elRight > pos.canvasWidth) {
+        left -= elRight - pos.canvasWidth;
       }
 
-      var leftPos = pos.left + pos.elementWidth - pos.targetWidth;
-      toolbarStyle.top = pos.top + unit;
-      toolbarStyle.left = (leftPos < 0 ? 0 : leftPos) + unit;
+      left = left < 0 ? 0 : left;
+      toolbarStyle.top = `${pos.top}${unit}`;
+      toolbarStyle.left = `${left}${unit}`;
       toolbarStyle.opacity = '';
     }
   },
@@ -670,14 +680,15 @@ module.exports = {
     this.onSelect();
   },
 
-  stop(editor, sender, opts = {}) {
-    const em = this.em;
+  stop(ed, sender, opts = {}) {
+    const { em, editor } = this;
     this.stopSelectComponent();
     !opts.preserveSelected && em.setSelected(null);
     this.clean();
     this.onOut();
     this.hideFixedElementOffset();
     this.canvas.getToolbarEl().style.display = 'none';
+    editor && editor.stopCommand('resize');
 
     em.off('component:update', this.updateAttached, this);
     em.off('change:canvasOffset', this.updateAttached, this);

@@ -757,12 +757,12 @@ const Component = Backbone.Model.extend(Styleable).extend(
      * @param  {Options} opts Options for the add
      * @return {Array} Array of added traits
      * @example
-     * component.addTrat('title', { at: 1 }); // Add title trait (`at` option is the position index)
-     * component.addTrat({
+     * component.addTrait('title', { at: 1 }); // Add title trait (`at` option is the position index)
+     * component.addTrait({
      *  type: 'checkbox',
      *  name: 'disabled',
      * });
-     * component.addTrat(['title', {...}, ...]);
+     * component.addTrait(['title', {...}, ...]);
      */
     addTrait(trait, opts = {}) {
       const { em } = this;
@@ -952,6 +952,7 @@ const Component = Backbone.Model.extend(Styleable).extend(
       obj.attributes = this.getAttributes();
       delete obj.attributes.class;
       delete obj.toolbar;
+      delete obj.traits;
 
       if (this.em.getConfig('avoidDefaults')) {
         const defaults = result(this, 'defaults');
@@ -1094,7 +1095,8 @@ const Component = Backbone.Model.extend(Styleable).extend(
      * @return {this}
      */
     remove() {
-      return this.collection.remove(this);
+      const coll = this.collection;
+      return coll && coll.remove(this);
     },
 
     /**

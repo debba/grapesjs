@@ -88,6 +88,23 @@ $guide_pad: 5px;
       }
     }
   }
+
+  &badge {
+    &__icon {
+      vertical-align: middle;
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+
+      svg {
+        fill: currentColor;
+      }
+    }
+    &__name {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
 }
 
 .#{$cv-prefix}canvas {
@@ -105,7 +122,7 @@ $guide_pad: 5px;
   &#{gjs-is(grab)},
   &#{gjs-is(grabbing)} {
     .#{$cv-prefix}canvas__frames {
-      pointer-events: none;
+      pointer-events: none; // Need this in multi-frame mode
     }
   }
 

@@ -1,5 +1,7 @@
 import { bindAll, isFunction, result, isUndefined } from 'underscore';
-import { on, off } from 'utils/mixins';
+import { on, off, isEscKey, getPointerEvent } from 'utils/mixins';
+
+const resetPos = () => ({ x: 0, y: 0 });
 
 export default class Dragger {
   /**
@@ -8,6 +10,10 @@ export default class Dragger {
    */
   constructor(opts = {}) {
     this.opts = {
+      /**
+       * Element on which the drag will be executed. By default, the document will be used
+       */
+      container: null,
       /**
        * Callback on start
        * onStart(ev, dragger) {
@@ -57,9 +63,9 @@ export default class Dragger {
       // Scale result points, can also be a function
       scale: 1
     };
-    bindAll(this, 'drag', 'stop');
+    bindAll(this, 'drag', 'stop', 'keyHandle', 'handleScroll');
     this.setOptions(opts);
-    this.delta = { x: 0, y: 0 };
+    this.delta = resetPos();
     return this;
   }
 
@@ -76,10 +82,25 @@ export default class Dragger {
 
   toggleDrag(enable) {
     const docs = this.getDocumentEl();
+    const container = this.getContainerEl();
+    const win = this.getWindowEl();
     const method = enable ? 'on' : 'off';
     const methods = { on, off };
-    methods[method](docs, 'mousemove', this.drag);
-    methods[method](docs, 'mouseup', this.stop);
+    methods[method](container, 'mousemove dragover', this.drag);
+    methods[method](docs, 'mouseup dragend touchend', this.stop);
+    methods[method](docs, 'keydown', this.keyHandle);
+    methods[method](win, 'scroll', this.handleScroll);
+  }
+
+  handleScroll() {
+    const { lastScroll, delta } = this;
+    const actualScroll = this.getScrollInfo();
+    const scrollDiff = {
+      x: actualScroll.x - lastScroll.x,
+      y: actualScroll.y - lastScroll.y
+    };
+    this.move(delta.x + scrollDiff.x, delta.y + scrollDiff.y);
+    this.lastScrollDiff = scrollDiff;
   }
 
   /**
@@ -95,6 +116,8 @@ export default class Dragger {
     this.guidesTarget = result(opts, 'guidesTarget') || [];
     isFunction(onStart) && onStart(ev, this);
     this.startPosition = this.getStartPosition();
+    this.lastScrollDiff = resetPos();
+    this.globScrollDiff = resetPos();
     this.drag(ev);
   }
 
@@ -103,14 +126,20 @@ export default class Dragger {
    * @param  {Event} event
    */
   drag(ev) {
-    const { opts } = this;
+    const { opts, lastScrollDiff, globScrollDiff } = this;
     const { onDrag } = opts;
     const { startPointer } = this;
     const currentPos = this.getPointerPos(ev);
-    const delta = {
-      x: currentPos.x - startPointer.x,
-      y: currentPos.y - startPointer.y
+    const glDiff = {
+      x: globScrollDiff.x + lastScrollDiff.x,
+      y: globScrollDiff.y + lastScrollDiff.y
     };
+    this.globScrollDiff = glDiff;
+    const delta = {
+      x: currentPos.x - startPointer.x + glDiff.x,
+      y: currentPos.y - startPointer.y + glDiff.y
+    };
+    this.lastScrollDiff = resetPos();
     let { lockedAxis } = this;
 
     // Lock one axis
@@ -135,6 +164,7 @@ export default class Dragger {
     const deltaPre = { ...delta };
     this.currentPointer = currentPos;
     this.lockedAxis = lockedAxis;
+    this.lastScroll = this.getScrollInfo();
     moveDelta(delta);
 
     if (this.guidesTarget.length) {
@@ -227,13 +257,22 @@ export default class Dragger {
   /**
    * Stop dragging
    */
-  stop(ev) {
+  stop(ev, opts = {}) {
     const { delta } = this;
+    const cancelled = opts.cancel;
+    const x = cancelled ? 0 : delta.x;
+    const y = cancelled ? 0 : delta.y;
     this.toggleDrag();
     this.lockedAxis = null;
-    this.move(delta.x, delta.y, 1);
+    this.move(x, y, 1);
     const { onEnd } = this.opts;
-    isFunction(onEnd) && onEnd(ev, this);
+    isFunction(onEnd) && onEnd(ev, this, { cancelled });
+  }
+
+  keyHandle(ev) {
+    if (isEscKey(ev)) {
+      this.stop(ev, { cancel: 1 });
+    }
   }
 
   /**
@@ -262,6 +301,19 @@ export default class Dragger {
     }
   }
 
+  getContainerEl() {
+    const { container } = this.opts;
+    return container ? [container] : this.getDocumentEl();
+  }
+
+  getWindowEl() {
+    const cont = this.getContainerEl();
+    return cont.map(item => {
+      const doc = item.ownerDocument || item;
+      return doc.defaultView || doc.parentWindow;
+    });
+  }
+
   /**
    * Returns documents
    */
@@ -286,18 +338,20 @@ export default class Dragger {
    */
   getPointerPos(ev) {
     const getPos = this.opts.getPointerPosition;
+    const pEv = getPointerEvent(ev);
+
     return getPos
       ? getPos(ev)
       : {
-          x: ev.clientX,
-          y: ev.clientY
+          x: pEv.clientX,
+          y: pEv.clientY
         };
   }
 
   getStartPosition() {
     const { el, opts } = this;
     const getPos = opts.getPosition;
-    let result = { x: 0, y: 0 };
+    let result = resetPos();
 
     if (isFunction(getPos)) {
       result = getPos();
@@ -309,6 +363,16 @@ export default class Dragger {
     }
 
     return result;
+  }
+
+  getScrollInfo() {
+    const { doc } = this.opts;
+    const body = doc && doc.body;
+
+    return {
+      y: body ? body.scrollTop : 0,
+      x: body ? body.scrollLeft : 0
+    };
   }
 
   detectAxisLock(x, y) {

@@ -8,8 +8,7 @@ module.exports = ComponentView.extend({
     dblclick: 'onActive',
     click: 'initResize',
     error: 'onError',
-    dragstart: 'noDrag',
-    mousedown: 'noDrag'
+    dragstart: 'noDrag'
   },
 
   initialize(o) {
@@ -27,6 +26,7 @@ module.exports = ComponentView.extend({
    * Fetch file if exists
    */
   fetchFile() {
+    if (this.modelOpt.temporary) return;
     const model = this.model;
     const file = model.get('file');
 

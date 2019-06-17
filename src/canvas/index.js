@@ -115,6 +115,10 @@ module.exports = () => {
       return CanvasView.el;
     },
 
+    getFrame() {
+      return canvas.get('frame');
+    },
+
     /**
      * Get the iframe element of the canvas
      * @return {HTMLIFrameElement}
@@ -360,7 +364,9 @@ module.exports = () => {
         targetWidth: target.offsetWidth,
         targetHeight: target.offsetHeight,
         canvasTop: canvasPos.top,
-        canvasLeft: canvasPos.left
+        canvasLeft: canvasPos.left,
+        canvasWidth: canvasPos.width,
+        canvasHeight: canvasPos.height
       };
 
       // In this way I can catch data and also change the position strategy

@@ -106,6 +106,10 @@ module.exports = Backbone.Model.extend({
     );
   },
 
+  getContainer() {
+    return this.config.el;
+  },
+
   listenLog(event) {
     this.listenTo(this, `log:${event}`, logs[event]);
   },
@@ -623,6 +627,14 @@ module.exports = Backbone.Model.extend({
 
   getZoomDecimal() {
     return this.get('Canvas').getZoomDecimal();
+  },
+
+  /**
+   * Returns true if the editor is in absolute mode
+   * @returns {Boolean}
+   */
+  inAbsoluteMode() {
+    return this.get('dmode') === 'absolute';
   },
 
   /**

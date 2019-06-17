@@ -15,11 +15,8 @@ module.exports = {
       'getGuidesTarget'
     );
     const { target, event, mode, dragger = {} } = opts;
-    const { Canvas } = editor;
     const el = target.getEl();
-    const scale = Canvas.getZoomMultiplier();
     const config = {
-      scale,
       doc: el.ownerDocument,
       onStart: this.onStart,
       onEnd: this.onEnd,
@@ -177,7 +174,6 @@ module.exports = {
     const { Canvas } = this.editor;
     const { topScroll, top } = Canvas.getRect();
     const frameTop = Canvas.getCanvasView().getFrameOffset().top;
-    // const elRect = this.getGuidePosUpdate(item, el.getBoundingClientRect());
     const un = 'px';
     const guideSize = item.active ? 2 : 1;
     let numEl = el.children[0];
@@ -197,14 +193,11 @@ module.exports = {
       el.style.height = `${guideSize}${un}`;
       el.style.top = `${item.y}${un}`;
       el.style.left = 0;
-      // numEl.innerHTML = elRect.y;
     } else {
       el.style.width = `${guideSize}${un}`;
       el.style.height = '100%';
       el.style.left = `${item.x}${un}`;
       el.style.top = `${topScroll - frameTop + top}${un}`;
-      // numEl.innerHTML = elRect.x;
-      // numEl.innerHTML = el.style.left;
     }
 
     !item.guide && this.guidesContainer.appendChild(el);
@@ -269,7 +262,8 @@ module.exports = {
       x = this.getTranslate(transform);
       y = this.getTranslate(transform, 'y');
     } else {
-      (x = parseFloat(left)), (y = parseFloat(top));
+      x = parseFloat(left);
+      y = parseFloat(top);
     }
 
     return { x, y };
@@ -299,13 +293,23 @@ module.exports = {
   },
 
   onStart() {
-    const { target, editor, isTran } = this;
+    const { target, editor, isTran, opts } = this;
+    const { center } = opts;
+    const { Canvas } = editor;
     const style = target.getStyle();
     const position = 'absolute';
     if (isTran) return;
 
     if (style.position !== position) {
-      const { left, top, width, height } = editor.Canvas.offset(target.getEl());
+      let { left, top, width, height } = Canvas.offset(target.getEl());
+
+      // Check if to center the target to the pointer position
+      if (center) {
+        const { x, y } = Canvas.getMouseRelativeCanvas(event);
+        left = x;
+        top = y;
+      }
+
       this.setPosition({
         x: left,
         y: top,
@@ -316,18 +320,20 @@ module.exports = {
     }
   },
 
-  onDrag() {
+  onDrag(...args) {
     const { guidesTarget, opts } = this;
+    const { onDrag } = opts;
     this.updateGuides(guidesTarget);
     opts.debug && guidesTarget.forEach(item => this.renderGuide(item));
     opts.guidesInfo &&
       this.renderGuideInfo(guidesTarget.filter(item => item.active));
+    onDrag && onDrag(...args);
   },
 
-  onEnd() {
+  onEnd(...args) {
     const { editor, opts, id } = this;
     const { onEnd } = opts;
-    onEnd && onEnd();
+    onEnd && onEnd(...args);
     editor.stopCommand(id);
     this.hideGuidesInfo();
   },
@@ -407,12 +413,13 @@ module.exports = {
     });
   },
 
-  toggleDrag(on) {
+  toggleDrag(enable) {
     const { ppfx, editor } = this;
-    const methodCls = on ? 'add' : 'remove';
-    const canvas = this.getCanvas();
+    const methodCls = enable ? 'add' : 'remove';
     const classes = [`${ppfx}is__grabbing`];
-    classes.forEach(cls => canvas.classList[methodCls](cls));
-    editor.Canvas[on ? 'startAutoscroll' : 'stopAutoscroll']();
+    const { Canvas } = editor;
+    const body = Canvas.getBody();
+    classes.forEach(cls => body.classList[methodCls](cls));
+    Canvas[enable ? 'startAutoscroll' : 'stopAutoscroll']();
   }
 };
