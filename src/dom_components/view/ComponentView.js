@@ -1,11 +1,10 @@
 import Backbone from 'backbone';
 import { isArray, isEmpty, each, keys } from 'underscore';
+import Components from '../model/Components';
+import ComponentsView from './ComponentsView';
+import Selectors from 'selector_manager/model/Selectors';
 
-const Components = require('../model/Components');
-const ComponentsView = require('./ComponentsView');
-const Selectors = require('selector_manager/model/Selectors');
-
-module.exports = Backbone.View.extend({
+export default Backbone.View.extend({
   className() {
     return this.getClasses();
   },
@@ -34,7 +33,7 @@ module.exports = Backbone.View.extend({
     this.listenTo(model, 'change:highlightable', this.updateHighlight);
     this.listenTo(model, 'change:status', this.updateStatus);
     this.listenTo(model, 'change:state', this.updateState);
-    this.listenTo(model, 'change:script', this.render);
+    this.listenTo(model, 'change:script', this.reset);
     this.listenTo(model, 'change:content', this.updateContent);
     this.listenTo(model, 'change', this.handleChange);
     this.listenTo(model, 'active', this.onActive);
@@ -344,6 +343,19 @@ module.exports = Backbone.View.extend({
     }
 
     return container;
+  },
+
+  /**
+   * Recreate the element of the view
+   */
+  reset() {
+    const { el, model } = this;
+    const collection = model.components();
+    this.el = '';
+    this._ensureElement();
+    this.$el.data({ model, collection });
+    el.replaceWith(this.el);
+    this.render();
   },
 
   /**

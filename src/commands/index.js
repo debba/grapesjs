@@ -31,7 +31,7 @@ import { isFunction, includes } from 'underscore';
 import CommandAbstract from './view/CommandAbstract';
 import defaults from './config/config';
 
-module.exports = () => {
+export default () => {
   let em;
   let c = {};
   const commands = {};
@@ -152,7 +152,7 @@ module.exports = () => {
 
           if (includes(modes, mode)) {
             // TODO move grabbing func in editor/canvas from the Sorter
-            dragger = editor.runCommand('core:component-drag', {
+            dragger = ed.runCommand('core:component-drag', {
               guidesInfo: 1,
               mode,
               target: sel,
@@ -179,7 +179,7 @@ module.exports = () => {
       defaultCommands['core:redo'] = e => e.UndoManager.redo();
       commandsDef.forEach(item => {
         const oldCmd = item[2];
-        const cmd = require(`./view/${item[1]}`);
+        const cmd = require(`./view/${item[1]}`).default;
         const cmdName = `core:${item[0]}`;
         defaultCommands[cmdName] = cmd;
         if (oldCmd) {
