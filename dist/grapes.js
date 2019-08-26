@@ -19268,7 +19268,13 @@ __webpack_require__.r(__webpack_exports__);
   // Default title for the asset manager modal
   modalTitle: 'Select Image',
   //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg'
+  inputPlaceholder: 'http://path/to/the/image.jpg',
+  // Template for using a custom assets template
+  useCustomAssetsTemplate: '',
+  // Hide File uploader, it could be useful to render a file upload button block
+  // in custom assets template and keeping upload logic using html elements in
+  // FileUploader view
+  hideFileUploader: 0
 });
 
 /***/ }),
@@ -19522,6 +19528,17 @@ __webpack_require__.r(__webpack_exports__);
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
+    },
+
+    /**
+     *  Get assets element container
+     * @param {string} template
+     * @param {boolean} hideFileUploader
+     */
+    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
+      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      if (template !== '') c.useCustomAssetsTemplate = template;
+      c.hideFileUploader = hideFileUploader;
     },
 
     /**
@@ -19918,7 +19935,7 @@ __webpack_require__.r(__webpack_exports__);
   template: function template(view) {
     var pfx = view.pfx;
     var ppfx = view.ppfx;
-    return "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        <form class=\"").concat(pfx, "add-asset\">\n          <div class=\"").concat(ppfx, "field ").concat(pfx, "add-field\">\n            <input placeholder=\"").concat(view.config.inputPlaceholder, "\"/>\n          </div>\n          <button class=\"").concat(ppfx, "btn-prim\">").concat(view.config.addBtnText, "</button>\n          <div style=\"clear:both\"></div>\n        </form>\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
+    return view.config.useCustomAssetsTemplate || "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        <form class=\"").concat(pfx, "add-asset\">\n          <div class=\"").concat(ppfx, "field ").concat(pfx, "add-field\">\n            <input placeholder=\"").concat(view.config.inputPlaceholder, "\"/>\n          </div>\n          <button class=\"").concat(ppfx, "btn-prim\">").concat(view.config.addBtnText, "</button>\n          <div style=\"clear:both\"></div>\n        </form>\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -20073,6 +20090,7 @@ __webpack_require__.r(__webpack_exports__);
   render: function render() {
     var fuRendered = this.options.fu.render().el;
     this.$el.empty();
+    if (this.config.hideFileUploader) fuRendered.style.display = 'none';
     this.$el.append(fuRendered).append(this.template(this));
     this.el.className = "".concat(this.ppfx, "asset-manager");
     this.renderAssets();
@@ -36113,7 +36131,7 @@ var defaultConfig = {
   editors: editors,
   plugins: plugins,
   // Will be replaced on build
-  version: '0.15.3',
+  version: '0.15.4',
 
   /**
    * Initialize the editor with passed options
@@ -45614,16 +45632,40 @@ var clearProp = 'data-clear-style';
     var result;
     var model = this.model;
     var target = this.getTargetModel();
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
+    var property = model.get('property');
+    var component = em && em.getSelected();
     var customFetchValue = this.customValue;
 
     if (!target) {
       return result;
     }
 
-    result = target.getStyle()[model.get('property')];
+    if (component && !Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(component.getStyle()[model.get('property')])) {
+      result = component.getStyle()[model.get('property')];
+    } else {
+      result = target.getStyle()[model.get('property')];
+    }
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
+    }
+
+    model.unset('newResult', {
+      silent: true
+    });
+
+    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleFetch:property', property, model, result);
+        component.trigger("ownStyleFetch:property:".concat(property), model, result);
+      }
+
+      em.trigger("ownStyleFetch:property:".concat(property), model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+      var newResult = model.get('newResult');
+      if (!Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(newResult)) result = newResult;
     }
 
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
@@ -45719,8 +45761,12 @@ var clearProp = 'data-clear-style';
     var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var property = name || this.model.get('property');
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
     var target = this.getTarget();
     var style = target.getStyle();
+    var component = em && em.getSelected();
+    if (component) style = component.getStyle();
 
     if (value) {
       style[property] = value;
@@ -45728,7 +45774,31 @@ var clearProp = 'data-clear-style';
       delete style[property];
     }
 
-    target.setStyle(style, opts); // Helper is used by `states` like ':hover' to show its preview
+    target.unset('isOwnEdited');
+
+    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleUpdate:property', property, value, target);
+        component.trigger("ownStyleUpdate:property:".concat(property), value, target);
+      }
+
+      em.trigger("ownStyleUpdate:property:".concat(property), value, target);
+      em.trigger("ownStyleUpdate:property", property, value, target);
+      var isOwnEdited = target.get('isOwnEdited');
+
+      if (Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(isOwnEdited)) {
+        if (component) {
+          component.setStyle(style, opts);
+        } else target.setStyle(style, opts);
+      }
+    } else {
+      if (component) {
+        component.setStyle(style, opts);
+      } else {
+        target.setStyle(style, opts);
+      }
+    } // Helper is used by `states` like ':hover' to show its preview
+
 
     var helper = this.getHelperModel();
     helper && helper.setStyle(style, opts);
@@ -51455,6 +51525,13 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
    */
   closest: function closest(el, selector) {
     if (!el) return;
+    /**
+     * [Fix in case of empty block]
+     * check before the block and
+     * after that, all of parentNodes
+     */
+
+    if (selector !== '*' && this.matches(el, selector)) return el;
     var elem = el.parentNode;
 
     while (elem && elem.nodeType === 1) {
