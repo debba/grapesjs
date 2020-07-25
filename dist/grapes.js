@@ -20211,12 +20211,10 @@ module.exports = g;
 /*!********************************************!*\
   !*** ./src/asset_manager/config/config.js ***!
   \********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = ({
+module.exports = {
   // Default assets
   // eg. [
   //  'https://...image1.png',
@@ -20257,6 +20255,10 @@ __webpack_require__.r(__webpack_exports__);
   //  ]
   // }
   autoAdd: 1,
+  // Text on upload input
+  uploadText: 'Drop files here or click to upload',
+  // Label for the add button
+  addBtnText: 'Add image',
   // To upload your assets, the module uses Fetch API, with this option you
   // overwrite it with something else.
   // It should return a Promise
@@ -20299,9 +20301,17 @@ __webpack_require__.r(__webpack_exports__);
   //   if(stopUpload) return false;
   // }
   beforeUpload: null,
+  //Default placeholder for input
+  inputPlaceholder: 'http://path/to/the/image.jpg',
+  // Template for using a custom assets template
+  useCustomAssetsTemplate: '',
+  // Hide File uploader, it could be useful to render a file upload button block
+  // in custom assets template and keeping upload logic using html elements in
+  // FileUploader view
+  hideFileUploader: 0,
   // Toggles visiblity of assets url input
   showUrlInput: true
-});
+};
 
 /***/ }),
 
@@ -20315,6 +20325,7 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _config_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config/config */ "./src/asset_manager/config/config.js");
+/* harmony import */ var _config_config__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_config_config__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _model_Assets__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./model/Assets */ "./src/asset_manager/model/Assets.js");
 /* harmony import */ var _view_AssetsView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./view/AssetsView */ "./src/asset_manager/view/AssetsView.js");
 /* harmony import */ var _view_FileUploader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/FileUploader */ "./src/asset_manager/view/FileUploader.js");
@@ -20384,8 +20395,8 @@ __webpack_require__.r(__webpack_exports__);
 
       c = config || {};
 
-      for (var name in _config_config__WEBPACK_IMPORTED_MODULE_0__["default"]) {
-        if (!(name in c)) c[name] = _config_config__WEBPACK_IMPORTED_MODULE_0__["default"][name];
+      for (var name in _config_config__WEBPACK_IMPORTED_MODULE_0___default.a) {
+        if (!(name in c)) c[name] = _config_config__WEBPACK_IMPORTED_MODULE_0___default.a[name];
       }
 
       var ppfx = c.pStylePrefix;
@@ -20554,6 +20565,17 @@ __webpack_require__.r(__webpack_exports__);
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
+    },
+
+    /**
+     *  Get assets element container
+     * @param {string} template
+     * @param {boolean} hideFileUploader
+     */
+    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
+      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      if (template !== '') c.useCustomAssetsTemplate = template;
+      c.hideFileUploader = hideFileUploader;
     },
 
     /**
@@ -27566,12 +27588,19 @@ var cmdVis = 'sw-visibility';
 
     return this.panels;
   },
+  preventDrag: function preventDrag(opts) {
+    opts.abort = 1;
+  },
   tglPointers: function tglPointers(editor, val) {
     var body = editor.Canvas.getBody();
     var elP = body.querySelectorAll(".".concat(this.ppfx, "no-pointer"));
     Object(underscore__WEBPACK_IMPORTED_MODULE_0__["each"])(elP, function (item) {
       return item.style.pointerEvents = val ? '' : 'all';
     });
+  },
+  tglEffects: function tglEffects(on) {
+    var mthEv = on ? 'on' : 'off';
+    this.em[mthEv]('run:tlb-move:before', this.preventDrag);
   },
   run: function run(editor, sender) {
     var _this = this;
@@ -27614,6 +27643,7 @@ var cmdVis = 'sw-visibility';
     canvasS.padding = '0';
     canvasS.margin = '0';
     editor.refresh();
+    this.tglEffects(1);
   },
   stop: function stop(editor) {
     var _this$sender = this.sender,
@@ -27639,6 +27669,7 @@ var cmdVis = 'sw-visibility';
 
     editor.refresh();
     this.tglPointers(editor, 1);
+    this.tglEffects();
   }
 });
 
@@ -27894,6 +27925,7 @@ var showOffsets;
     this.updateToolsGlobal(); // This will hide some elements from the select component
 
     this.updateToolsLocal(result);
+    this.initResize(component);
   }),
   updateGlobalPos: function updateGlobalPos() {
     var sel = this.getElSelected();
@@ -28148,8 +28180,7 @@ var showOffsets;
     var pfx = config.stylePrefix || '';
     var resizeClass = "".concat(pfx, "resizing");
     var model = !Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isElement"])(elem) && Object(utils_mixins__WEBPACK_IMPORTED_MODULE_4__["isTaggableNode"])(elem) ? elem : em.getSelected();
-    var resizable = model.get('resizable');
-    var el = Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isElement"])(elem) ? elem : model.getEl();
+    var resizable = model && model.get('resizable');
     var options = {};
     var modelToStyle;
 
@@ -28163,6 +28194,7 @@ var showOffsets;
     };
 
     if (editor && resizable) {
+      var el = Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isElement"])(elem) ? elem : model.getEl();
       options = {
         // Here the resizer is updated with the current element height and width
         onStart: function onStart(e) {
@@ -28457,24 +28489,14 @@ var showOffsets;
     this.updateToolbarPos({
       top: targetToElem.top,
       left: targetToElem.left
-    }); // const { resizer, em } = this;
-    // const model = em.getSelected();
-    // const el = model && model.getEl();
-    // if (!el) return;
-    // if (el && this.elSelected !== el) {
-    //   this.elSelected = el;
-    //   const pos = this.getElementPos(el);
-    //   this.updateToolbarPos(el, pos);
-    //   this.showFixedElementOffset(el, pos);
-    //   resizer && resizer.updateContainer();
-    // }
+    });
   },
 
   /**
    * Update attached elements, eg. component toolbar
    */
   updateAttached: Object(underscore__WEBPACK_IMPORTED_MODULE_3__["debounce"])(function () {
-    this.updateToolsGlobal();
+    this.updateGlobalPos();
   }),
 
   /**
@@ -30825,6 +30847,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
      * @param {string} [component.content=''] String inside component
      * @param {Object} [component.style={}] Style object
      * @param {Object} [component.attributes={}] Attribute object
+     * @param {Object} opt the options object to be used by the [Components.add]{@link getComponents} method
      * @return {Component|Array<Component>} Component/s added
      * @example
      * // Example of a new component with some extra property
@@ -30839,7 +30862,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
      * });
      */
     addComponent: function addComponent(component) {
-      return this.getComponents().add(component);
+      var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return this.getComponents().add(component, opt);
     },
 
     /**
@@ -30869,11 +30893,13 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     /**
      * Set components
      * @param {Object|string} components HTML string or components model
+     * @param {Object} opt the options object to be used by the {@link addComponent} method
      * @return {this}
      * @private
      */
     setComponents: function setComponents(components) {
-      this.clear().addComponent(components);
+      var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      this.clear().addComponent(components, opt);
     },
 
     /**
@@ -34143,6 +34169,7 @@ __webpack_require__.r(__webpack_exports__);
     dblclick: 'onActive',
     click: 'initResize',
     error: 'onError',
+    load: 'onLoad',
     dragstart: 'noDrag'
   },
   initialize: function initialize(o) {
@@ -34224,6 +34251,10 @@ __webpack_require__.r(__webpack_exports__);
       fallback: 1
     });
     if (fallback) this.el.src = fallback;
+  },
+  onLoad: function onLoad() {
+    // Used to update component tools box (eg. toolbar, resizer) once the image is loaded
+    this.em.trigger('change:canvasOffset');
   },
   noDrag: function noDrag(ev) {
     ev.preventDefault();
@@ -37199,6 +37230,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     /**
      * Set components inside editor's canvas. This method overrides actual components
      * @param {Array<Object>|Object|string} components HTML string or components model
+     * @param {Object} opt the options object to be used by the [setComponents]{@link em#setComponents} method
      * @return {this}
      * @example
      * editor.setComponents('<div class="cls">New component</div>');
@@ -37210,7 +37242,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
      * });
      */
     setComponents: function setComponents(components) {
-      em.setComponents(components);
+      var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      em.setComponents(components, opt);
       return this;
     },
 
@@ -37246,6 +37279,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     /**
      * Set style inside editor's canvas. This method overrides actual style
      * @param {Array<Object>|Object|string} style CSS string or style model
+     * @param {Object} opt the options object to be used by the [setStyle]{@link em#setStyle} method
      * @return {this}
      * @example
      * editor.setStyle('.cls{color: red}');
@@ -37256,7 +37290,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
      * });
      */
     setStyle: function setStyle(style) {
-      em.setStyle(style);
+      var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      em.setStyle(style, opt);
       return this;
     },
 
@@ -38037,11 +38072,13 @@ var logs = {
   /**
    * Set components inside editor's canvas. This method overrides actual components
    * @param {Object|string} components HTML string or components model
+   * @param {Object} opt the options object to be used by the [setComponents]{@link setComponents} method
    * @return {this}
    * @private
    */
   setComponents: function setComponents(components) {
-    return this.get('DomComponents').setComponents(components);
+    var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    return this.get('DomComponents').setComponents(components, opt);
   },
 
   /**
@@ -38060,17 +38097,19 @@ var logs = {
   /**
    * Set style inside editor's canvas. This method overrides actual style
    * @param {Object|string} style CSS string or style model
+   * @param {Object} opt the options object to be used by the [CssRules.add]{@link rules#add} method
    * @return {this}
    * @private
    */
   setStyle: function setStyle(style) {
+    var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var rules = this.get('CssComposer').getAll();
 
     for (var i = 0, len = rules.length; i < len; i++) {
       rules.pop();
     }
 
-    rules.add(style);
+    rules.add(style, opt);
     return this;
   },
 
@@ -39967,7 +40006,7 @@ var ItemsView;
     var model = this.model;
     var hClass = "".concat(pfx, "layer-hidden");
     var hideIcon = 'fa-eye-slash';
-    var hidden = model.getStyle().display == 'none';
+    var hidden = model.getStyle().display === 'none';
     var method = hidden ? 'addClass' : 'removeClass';
     this.$el[method](hClass);
     this.getVisibilityEl()[method](hideIcon);
@@ -40171,13 +40210,13 @@ var ItemsView;
   /**
    * Check if component is visible
    *
-   * @return bool
+   * @return boolean
    * */
   isVisible: function isVisible() {
-    var css = this.model.get('style'),
-        pr = css.display;
-    if (pr && pr == 'none') return;
-    return 1;
+    var _this$model$getStyle = this.model.getStyle(),
+        display = _this$model$getStyle.display;
+
+    return !(display && display === 'none');
   },
 
   /**
@@ -42124,6 +42163,11 @@ __webpack_require__.r(__webpack_exports__);
 
             model[modelAttr] = nodeValue;
           } else {
+            // Check for attributes from props (eg. required, disabled)
+            if (nodeValue === '' && node[nodeName] === true) {
+              nodeValue = true;
+            }
+
             model.attributes[nodeName] = nodeValue;
           }
         } // Check for nested elements but avoid it if already provided
@@ -42779,12 +42823,12 @@ var defActions = {
   },
   strikethrough: {
     name: 'strikethrough',
-    icon: '<strike>S</strike>',
+    icon: '<s>S</s>',
     attributes: {
       title: 'Strike-through'
     },
     result: function result(rte) {
-      return rte.exec('strikeThrough');
+      return rte.insertHTML("<s>".concat(rte.selection(), "</s>"));
     }
   },
   link: {
@@ -46863,7 +46907,7 @@ __webpack_require__.r(__webpack_exports__);
 
           case 'font-family':
             var ss = ', sans-serif';
-            var fonts = ['Arial, Helvetica' + ss, 'Arial Black, Gadget' + ss, 'Brush Script MT' + ss, 'Comic Sans MS, cursive' + ss, 'Courier New, Courier, monospace', 'Georgia, serif', 'Helvetica, serif', 'Impact, Charcoal' + ss, 'Lucida Sans Unicode, Lucida Grande' + ss, 'Tahoma, Geneva' + ss, 'Times New Roman, Times, serif', 'Trebuchet MS, Helvetica' + ss, 'Verdana, Geneva' + ss];
+            var fonts = ['Arial, Helvetica' + ss, 'Arial Black, Gadget' + ss, 'Brush Script MT' + ss, 'Comic Sans MS, cursive' + ss, 'Courier New, Courier, monospace', 'Georgia, serif', 'Helvetica' + ss, 'Impact, Charcoal' + ss, 'Lucida Sans Unicode, Lucida Grande' + ss, 'Tahoma, Geneva' + ss, 'Times New Roman, Times, serif', 'Trebuchet MS, Helvetica' + ss, 'Verdana, Geneva' + ss];
             obj.list = [];
 
             for (var j = 0, l = fonts.length; j < l; j++) {
@@ -49170,13 +49214,13 @@ var clearProp = 'data-clear-style';
   _getTargetData: function _getTargetData() {
     var model = this.model,
         config = this.config;
+    var value = '';
+    var status = '';
     var targetValue = this.getTargetValue({
       ignoreDefault: 1
     });
     var defaultValue = model.getDefaultValue();
     var computedValue = this.getComputedValue();
-    var value = '';
-    var status = '';
 
     if (targetValue) {
       value = targetValue;
@@ -49184,7 +49228,7 @@ var clearProp = 'data-clear-style';
       if (config.highlightChanged) {
         status = 'updated';
       }
-    } else if (computedValue && config.showComputed && computedValue != defaultValue) {
+    } else if (computedValue && config.showComputed && computedValue !== defaultValue) {
       value = computedValue;
 
       if (config.highlightComputed) {
@@ -49302,21 +49346,45 @@ var clearProp = 'data-clear-style';
     var result;
     var model = this.model;
     var target = this.getTargetModel();
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
+    var property = model.get('property');
+    var component = em && em.getSelected();
     var customFetchValue = this.customValue;
 
     if (!target) {
       return result;
     }
 
-    result = target.getStyle()[model.get('property')];
+    if (component && !Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(component.getStyle()[model.get('property')])) {
+      result = component.getStyle()[model.get('property')];
+    } else {
+      result = target.getStyle()[model.get('property')];
+    }
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
     }
 
+    model.unset('newResult', {
+      silent: true
+    });
+
+    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleFetch:property', property, model, result);
+        component.trigger("ownStyleFetch:property:".concat(property), model, result);
+      }
+
+      em.trigger("ownStyleFetch:property:".concat(property), model, result);
+      em.trigger('ownStyleFetch:property', property, model, result);
+      var newResult = model.get('newResult');
+      if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(newResult)) result = newResult;
+    }
+
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
       var index = model.collection.indexOf(model);
-      var customValue = customFetchValue(this, index, result);
+      var customValue = customFetchValue(this, index);
 
       if (customValue) {
         result = customValue;
@@ -49340,7 +49408,7 @@ var clearProp = 'data-clear-style';
     var notToSkip = avoid.indexOf(property) < 0;
     var value = computed[property];
     var valueDef = computedDef[Object(utils_mixins__WEBPACK_IMPORTED_MODULE_4__["camelCase"])(property)];
-    return computed && notToSkip && valueDef !== value && value || '';
+    return computed && notToSkip && valueDef !== value && value;
   },
 
   /**
@@ -49363,8 +49431,12 @@ var clearProp = 'data-clear-style';
     var _this3 = this;
 
     var opt = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var em = this.config.em;
     var model = this.model;
-    var value = model.getFullValue(); // Avoid element update if the change comes from it
+    var value = model.getFullValue();
+    var target = this.getTarget();
+    var prop = model.get('property');
+    var onChange = this.onChange; // Avoid element update if the change comes from it
 
     if (!opt.fromInput) {
       this.setValue(value);
@@ -49400,8 +49472,7 @@ var clearProp = 'data-clear-style';
           target: target
         }));
       }
-    } // TODO: use target if componentFirst
-
+    }
 
     var component = em && em.getSelected();
 
@@ -49424,8 +49495,12 @@ var clearProp = 'data-clear-style';
     var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var property = name || this.model.get('property');
-    var target = opts.target || this.getTarget();
+    var properStrategy = this.model.get('useOwnStrategy');
+    var em = this.em;
+    var target = this.getTarget();
     var style = target.getStyle();
+    var component = em && em.getSelected();
+    if (component) style = component.getStyle();
 
     if (value) {
       style[property] = value;
@@ -49440,7 +49515,31 @@ var clearProp = 'data-clear-style';
       delete style.__;
     }
 
-    target.setStyle(style, opts); // Helper is used by `states` like ':hover' to show its preview
+    target.unset('isOwnEdited');
+
+    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
+      if (component) {
+        component.trigger('ownStyleUpdate:property', property, value, target);
+        component.trigger("ownStyleUpdate:property:".concat(property), value, target);
+      }
+
+      em.trigger("ownStyleUpdate:property:".concat(property), value, target);
+      em.trigger("ownStyleUpdate:property", property, value, target);
+      var isOwnEdited = target.get('isOwnEdited');
+
+      if (Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(isOwnEdited)) {
+        if (component) {
+          component.setStyle(style, opts);
+        } else target.setStyle(style, opts);
+      }
+    } else {
+      if (component) {
+        component.setStyle(style, opts);
+      } else {
+        target.setStyle(style, opts);
+      }
+    } // Helper is used by `states` like ':hover' to show its preview
+
 
     var helper = this.getHelperModel();
     helper && helper.setStyle(style, opts);
@@ -55232,6 +55331,13 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
    */
   closest: function closest(el, selector) {
     if (!el) return;
+    /**
+     * [Fix in case of empty block]
+     * check before the block and
+     * after that, all of parentNodes
+     */
+
+    if (selector !== '*' && this.matches(el, selector)) return el;
     var elem = el.parentNode;
 
     while (elem && elem.nodeType === 1) {
