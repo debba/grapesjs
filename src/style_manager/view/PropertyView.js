@@ -215,9 +215,6 @@ export default Backbone.View.extend({
 
   _getTargetData() {
     const { model, config } = this;
-    const targetValue = this.getTargetValue({ ignoreDefault: 1 });
-    const defaultValue = model.getDefaultValue();
-    const computedValue = this.getComputedValue();
     let value = '';
     let status = '';
     let targetValue = this.getTargetValue({ ignoreDefault: 1 });
@@ -233,7 +230,7 @@ export default Backbone.View.extend({
     } else if (
       computedValue &&
       config.showComputed &&
-      computedValue != defaultValue
+      computedValue !== defaultValue
     ) {
       value = computedValue;
 

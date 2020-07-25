@@ -114,7 +114,7 @@ module.exports = {
   // Hide File uploader, it could be useful to render a file upload button block
   // in custom assets template and keeping upload logic using html elements in
   // FileUploader view
-  hideFileUploader: 0
+  hideFileUploader: 0,
   // Toggles visiblity of assets url input
   showUrlInput: true
 };
