@@ -1,15 +1,16 @@
 import { on, off } from 'utils/mixins';
+import ComponentView from './ComponentView';
 
-const ComponentView = require('./ComponentView');
+const compProt = ComponentView.prototype;
 
-module.exports = ComponentView.extend({
+export default ComponentView.extend({
   events: {
     dblclick: 'onActive',
     input: 'onInput'
   },
 
   initialize(o) {
-    ComponentView.prototype.initialize.apply(this, arguments);
+    compProt.initialize.apply(this, arguments);
     this.disableEditing = this.disableEditing.bind(this);
     const model = this.model;
     const em = this.em;
@@ -34,18 +35,21 @@ module.exports = ComponentView.extend({
       return;
     }
     e && e.stopPropagation && e.stopPropagation();
-    const rte = this.rte;
+    const { rte, em } = this;
 
     if (rte) {
       try {
         this.activeRte = rte.enable(this, this.activeRte);
       } catch (err) {
-        console.error(err);
+        em.logError(err);
       }
     }
 
-    this.rteEnabled = 1;
     this.toggleEvents(1);
+  },
+
+  onDisable() {
+    this.disableEditing();
   },
 
   /**
@@ -53,21 +57,38 @@ module.exports = ComponentView.extend({
    * @private
    * */
   disableEditing() {
-    const { model, rte, activeRte } = this;
+    const { model, rte, activeRte, em } = this;
     const editable = model.get('editable');
 
     if (rte && editable) {
       try {
         rte.disable(this, activeRte);
       } catch (err) {
-        console.error(err);
+        em.logError(err);
       }
 
       this.syncContent();
     }
 
-    this.rteEnabled = 0;
     this.toggleEvents();
+  },
+
+  /**
+   * get content from RTE
+   * @return string
+   */
+  getContent() {
+    const { rte } = this;
+    const { activeRte } = rte || {};
+    let content = '';
+
+    if (activeRte && typeof activeRte.getContent === 'function') {
+      content = activeRte.getContent();
+    } else {
+      content = this.getChildrenContainer().innerHTML;
+    }
+
+    return content;
   },
 
   /**
@@ -76,7 +97,7 @@ module.exports = ComponentView.extend({
   syncContent(opts = {}) {
     const { model, rte, rteEnabled } = this;
     if (!rteEnabled && !opts.force) return;
-    const content = this.getChildrenContainer().innerHTML;
+    const content = this.getContent();
     const comps = model.components();
     const contentOpt = { fromDisable: 1, ...opts };
     comps.length && comps.reset(null, opts);
@@ -93,6 +114,7 @@ module.exports = ComponentView.extend({
           !['text', 'default', ''].some(type => model.is(type)) || textable;
         model.set(
           {
+            _innertext: !selectable,
             editable: selectable && model.get('editable'),
             selectable: selectable,
             hoverable: selectable,
@@ -115,15 +137,38 @@ module.exports = ComponentView.extend({
     }
   },
 
+  getModelsFromEl(el) {
+    const result = [];
+    const children = (el || this.el).childNodes;
+
+    for (let index = 0; index < children.length; index++) {
+      const child = children[index];
+      const model = child.__cashData && child.__cashData.model;
+
+      if (model) {
+        model.components = this.getModelsFromEl(child);
+        if (model.get('content')) {
+          model.attributes.content = child.textContent;
+        }
+        // TODO add attributes;
+        result.push(model);
+      }
+    }
+
+    return result;
+  },
+
   /**
    * Callback on input event
    * @param  {Event} e
    */
   onInput() {
     const { em } = this;
+    const evPfx = 'component';
+    const ev = [`${evPfx}:update`, `${evPfx}:input`].join(' ');
 
     // Update toolbars
-    em && em.trigger('change:canvasOffset');
+    em && em.trigger(ev, this.model);
   },
 
   /**
@@ -140,17 +185,33 @@ module.exports = ComponentView.extend({
    * @param {Boolean} enable
    */
   toggleEvents(enable) {
-    var method = enable ? 'on' : 'off';
+    const { em } = this;
     const mixins = { on, off };
-    this.em.setEditing(enable);
+    const method = enable ? 'on' : 'off';
+    em.setEditing(enable);
+    this.rteEnabled = !!enable;
 
     // The ownerDocument is from the frame
     var elDocs = [this.el.ownerDocument, document];
     mixins.off(elDocs, 'mousedown', this.disableEditing);
     mixins[method](elDocs, 'mousedown', this.disableEditing);
+    em[method]('toolbar:run:before', this.disableEditing);
 
     // Avoid closing edit mode on component click
     this.$el.off('mousedown', this.disablePropagation);
     this.$el[method]('mousedown', this.disablePropagation);
+
+    // Fixes #2210 but use this also as a replacement
+    // of this fix: bd7b804f3b46eb45b4398304b2345ce870f232d2
+    if (this.config.draggableComponents) {
+      let { el } = this;
+
+      while (el) {
+        el.draggable = enable ? !1 : !0;
+        // Note: el.parentNode is sometimes null here
+        el = el.parentNode;
+        el && el.tagName == 'BODY' && (el = 0);
+      }
+    }
   }
 });

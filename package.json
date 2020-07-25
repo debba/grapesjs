@@ -1,47 +1,54 @@
 {
   "name": "grapesjs",
   "description": "Free and Open Source Web Builder Framework",
-  "version": "0.14.64",
+  "version": "0.16.18",
   "author": "Artur Arseniev",
   "license": "BSD-3-Clause",
   "homepage": "http://grapesjs.com",
-  "main": "dist/grapes.js",
+  "main": "dist/grapes.min.js",
+  "sideEffects": [
+    "*.vue",
+    "*.css",
+    "*.scss"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/artf/grapesjs.git"
   },
   "dependencies": {
-    "backbone": "^1.3.3",
+    "@babel/runtime": "^7.9.2",
+    "backbone": "1.3.3",
     "backbone-undo": "^0.2.5",
-    "cash-dom": "^1.3.7",
-    "codemirror": "^5.42.0",
+    "cash-dom": "^2.3.9",
+    "codemirror": "^5.49.2",
     "codemirror-formatting": "^1.0.0",
-    "font-awesome": "^4.7.0",
     "keymaster": "^1.6.2",
-    "promise-polyfill": "^8.1.0",
+    "promise-polyfill": "^8.1.3",
     "spectrum-colorpicker": "^1.8.0",
     "underscore": "^1.9.1"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@vuepress/plugin-google-analytics": "^1.4.1",
+    "babel-loader": "^8.1.0",
     "documentation": "^8.1.2",
-    "eslint": "^5.9.0",
+    "eslint": "^6.6.0",
     "html-webpack-plugin": "^3.2.0",
-    "husky": "^1.2.0",
-    "jest": "^23.6.0",
-    "lint-staged": "^8.1.0",
-    "node-sass": "^4.10.0",
+    "husky": "^2.7.0",
+    "jest": "^24.9.0",
+    "lint-staged": "^8.2.1",
+    "node-sass": "^4.13.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^1.15.3",
-    "sinon": "^7.1.1",
-    "string-replace-loader": "^2.1.1",
-    "vuepress": "^0.10.2",
-    "webpack": "^4.26.1",
-    "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.10",
+    "prettier": "^1.18.2",
+    "sinon": "^7.5.0",
+    "string-replace-loader": "^2.2.0",
+    "vuepress": "^1.4.1",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0",
     "whatwg-fetch": "^3.0.0"
   },
   "keywords": [
@@ -58,24 +65,29 @@
   "babel": {
     "presets": [
       [
-        "env",
+        "@babel/preset-env",
         {
           "targets": [
             "> 1%",
             "ie 11",
             "safari 8"
-          ],
-          "useBuiltIns": true
+          ]
         }
       ]
     ],
     "plugins": [
-      "transform-object-rest-spread"
-    ]
+      "@babel/plugin-transform-runtime"
+    ],
+    "env": {
+      "test": {
+        "presets": [
+          "@babel/preset-env"
+        ]
+      }
+    }
   },
   "lint-staged": {
     "{src,test}/**/*.js": [
-      "prettier --single-quote --write",
       "git add"
     ]
   },
@@ -83,6 +95,9 @@
     "testURL": "http://localhost/",
     "modulePaths": [
       "./src"
+    ],
+    "testMatch": [
+      "<rootDir>/test/specs/**/*.js"
     ],
     "setupFiles": [
       "<rootDir>/test/setup.js"
@@ -104,14 +119,17 @@
     "docs:deploy": "docs/deploy.sh",
     "lint": "eslint src",
     "check": "npm run lint && npm run test",
-    "build": "npm run check && npm run v:patch && npm run build-dev && webpack --env=prod",
-    "build-n": "npm run check && npm run build:css && webpack --env=prod",
-    "build-dev": "webpack --env=dev && npm run build:css",
+    "build": "npm run check && npm run v:patch && npm run build-dev && npm run build-prod",
+    "build-n": "npm run check && npm run build:css && npm run build-prod",
+    "build-dev": "webpack --env=dev && npm run build:css && npm run build:locale",
+    "build-prod": "webpack --env=prod",
     "build:css": "node-sass src/styles/scss/main.scss dist/css/grapes.min.css --output-style compressed",
+    "build:locale": "rm -rf ./locale && node scripts/build-locale.js && babel locale -d locale --copy-files --no-comments",
     "v:patch": "npm version --no-git-tag-version patch",
     "start": "run-p start:*",
     "start:css": "npm run build:css -- -w",
     "start:js": "webpack-dev-server --open --progress --colors",
+    "stats": "webpack --env=prod --profile --json > stats.json && webpack-bundle-analyzer stats.json",
     "format": "prettier --single-quote --write './{src,test}/**/*.js'",
     "test": "jest",
     "test:dev": "jest --watch"

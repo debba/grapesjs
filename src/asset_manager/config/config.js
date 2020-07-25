@@ -96,8 +96,14 @@ module.exports = {
   // Any dropzone content to append inside dropzone element
   dropzoneContent: '',
 
-  // Default title for the asset manager modal
-  modalTitle: 'Select Image',
+  //method called before upload, on return false upload is canceled.
+  // @example
+  // beforeUpload: (files) => {
+  //   // logic...
+  //   var stopUpload = true;
+  //   if(stopUpload) return false;
+  // }
+  beforeUpload: null,
 
   //Default placeholder for input
   inputPlaceholder: 'http://path/to/the/image.jpg',
@@ -109,4 +115,6 @@ module.exports = {
   // in custom assets template and keeping upload logic using html elements in
   // FileUploader view
   hideFileUploader: 0
+  // Toggles visiblity of assets url input
+  showUrlInput: true
 };

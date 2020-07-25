@@ -39,23 +39,26 @@
  * * [add](#add)
  * * [addClass](#addclass)
  * * [get](#get)
- * * [getAll](#getAll)
+ * * [getAll](#getall)
+ * * [setState](#setstate)
+ * * [getState](#getstate)
  *
  * @module SelectorManager
  */
 
 import { isString, isElement, isObject, isArray } from 'underscore';
+import { isComponent, isRule } from 'utils/mixins';
+import defaults from './config/config';
+import Selector from './model/Selector';
+import Selectors from './model/Selectors';
+import ClassTagsView from './view/ClassTagsView';
 
 const isId = str => isString(str) && str[0] == '#';
 const isClass = str => isString(str) && str[0] == '.';
 
-module.exports = config => {
-  var c = config || {},
-    defaults = require('./config/config'),
-    Selector = require('./model/Selector'),
-    Selectors = require('./model/Selectors'),
-    ClassTagsView = require('./view/ClassTagsView');
-  var selectors, selectorTags;
+export default config => {
+  var c = config || {};
+  var selectors;
 
   return {
     Selector,
@@ -83,21 +86,20 @@ module.exports = config => {
      * @return {this}
      * @private
      */
-    init(conf) {
-      c = conf || {};
-
-      for (var name in defaults) {
-        if (!(name in c)) c[name] = defaults[name];
-      }
-
+    init(conf = {}) {
+      c = {
+        ...defaults,
+        ...conf
+      };
       const em = c.em;
       const ppfx = c.pStylePrefix;
+      this.em = em;
 
       if (ppfx) {
         c.stylePrefix = ppfx + c.stylePrefix;
       }
 
-      selectorTags = new ClassTagsView({
+      this.selectorTags = new ClassTagsView({
         collection: new Selectors([], { em, config: c }),
         config: c
       });
@@ -105,6 +107,16 @@ module.exports = config => {
       // Global selectors container
       selectors = new Selectors(c.selectors);
       selectors.on('add', model => em.trigger('selector:add', model));
+      selectors.on('remove', model => em.trigger('selector:remove', model));
+      selectors.on('change', model =>
+        em.trigger(
+          'selector:update',
+          model,
+          model.previousAttributes(),
+          model.changedAttributes()
+        )
+      );
+      em.on('change:state', (m, value) => em.trigger('selector:state', value));
 
       return this;
     },
@@ -116,6 +128,42 @@ module.exports = config => {
         const el = isElement(elTo) ? elTo : document.querySelector(elTo);
         el.appendChild(this.render([]));
       }
+    },
+
+    select(value, opts = {}) {
+      const targets = Array.isArray(value) ? value : [value];
+      const toSelect = this.em.get('StyleManager').setTarget(targets, opts);
+      const res = toSelect
+        .filter(i => i)
+        .map(sel =>
+          isComponent(sel)
+            ? sel
+            : isRule(sel) && !sel.get('selectorsAdd')
+            ? sel
+            : sel.getSelectorsString()
+        );
+      this.selectorTags.componentChanged({ targets: res });
+      return this;
+    },
+
+    /**
+     * Change the selector state
+     * @param {String} value State value
+     * @returns {this}
+     * @example
+     * selectorManager.setState('hover');
+     */
+    setState(value) {
+      this.em.setState(value);
+      return this;
+    },
+
+    /**
+     * Get the current selector state
+     * @returns {String}
+     */
+    getState() {
+      return this.em.setState();
     },
 
     addSelector(name, opt = {}) {
@@ -135,7 +183,7 @@ module.exports = config => {
       }
 
       if (opts.label && !opts.name) {
-        opts.name = Selector.escapeName(opts.label);
+        opts.name = this.escapeName(opts.label);
       }
 
       const cname = opts.name;
@@ -144,7 +192,7 @@ module.exports = config => {
         : selectors.where(opts)[0];
 
       if (!selector) {
-        return selectors.add(opts);
+        return selectors.add(opts, { config: c });
       }
 
       return selector;
@@ -203,7 +251,7 @@ module.exports = config => {
         classes = classes.trim().split(' ');
       }
 
-      classes.forEach(name => added.push(selectors.add({ name })));
+      classes.forEach(name => added.push(this.addSelector(name)));
       return added;
     },
 
@@ -241,6 +289,16 @@ module.exports = config => {
     },
 
     /**
+     * Return escaped selector name
+     * @param {String} name Selector name to escape
+     * @returns {String} Escaped name
+     */
+    escapeName(name) {
+      const { escapeName } = c;
+      return escapeName ? escapeName(name) : Selector.escapeName(name);
+    },
+
+    /**
      * Render class selectors. If an array of selectors is provided a new instance of the collection will be rendered
      * @param {Array<Object>} selectors
      * @return {HTMLElement}
@@ -248,12 +306,12 @@ module.exports = config => {
      */
     render(selectors) {
       if (selectors) {
-        var view = new ClassTagsView({
+        this.selectorTags = new ClassTagsView({
           collection: new Selectors(selectors),
           config: c
         });
-        return view.render().el;
-      } else return selectorTags.render().el;
+        return this.selectorTags.render().el;
+      } else return this.selectorTags.render().el;
     }
   };
 };

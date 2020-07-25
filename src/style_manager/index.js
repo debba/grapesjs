@@ -34,13 +34,13 @@
  */
 
 import { isElement } from 'underscore';
+import defaults from './config/config';
+import Sectors from './model/Sectors';
+import Properties from './model/Properties';
+import SectorsView from './view/SectorsView';
 
-module.exports = () => {
-  var c = {},
-    defaults = require('./config/config'),
-    Sectors = require('./model/Sectors'),
-    Properties = require('./model/Properties'),
-    SectorsView = require('./view/SectorsView');
+export default () => {
+  var c = {};
   let properties;
   var sectors, SectView;
 
@@ -66,12 +66,9 @@ module.exports = () => {
      * @private
      */
     init(config) {
-      c = config || {};
-      for (var name in defaults) {
-        if (!(name in c)) c[name] = defaults[name];
-      }
-
-      var ppfx = c.pStylePrefix;
+      c = { ...defaults, ...config };
+      const ppfx = c.pStylePrefix;
+      this.em = c.em;
       if (ppfx) c.stylePrefix = ppfx + c.stylePrefix;
       properties = new Properties();
       sectors = new Sectors([], c);
@@ -85,7 +82,8 @@ module.exports = () => {
     },
 
     onLoad() {
-      sectors.add(c.sectors);
+      // Use silent as sectors' view will be created and rendered on StyleManager.render
+      sectors.add(c.sectors, { silent: true });
     },
 
     postRender() {
@@ -105,20 +103,24 @@ module.exports = () => {
      * @param  {string} [sector.name='']  Sector's label
      * @param  {Boolean} [sector.open=true] Indicates if the sector should be opened
      * @param  {Array<Object>} [sector.properties=[]] Array of properties
+     * @param  {Object} [options={}] Options
      * @return {Sector} Added Sector
      * @example
      * var sector = styleManager.addSector('mySector',{
      *   name: 'My sector',
      *   open: true,
      *   properties: [{ name: 'My property'}]
-     * });
+     * }, { at: 0 });
+     * // With `at: 0` we place the new sector at the beginning of the collection
      * */
-    addSector(id, sector) {
-      var result = this.getSector(id);
+    addSector(id, sector, opts = {}) {
+      let result = this.getSector(id);
+
       if (!result) {
         sector.id = id;
-        result = sectors.add(sector);
+        result = sectors.add(sector, opts);
       }
+
       return result;
     },
 
@@ -129,9 +131,10 @@ module.exports = () => {
      * @example
      * var sector = styleManager.getSector('mySector');
      * */
-    getSector(id) {
-      var res = sectors.where({ id });
-      return res.length ? res[0] : null;
+    getSector(id, opts = {}) {
+      const res = sectors.where({ id })[0];
+      !res && opts.warn && this._logNoSector(id);
+      return res;
     },
 
     /**
@@ -142,7 +145,7 @@ module.exports = () => {
      * const removed = styleManager.removeSector('mySector');
      */
     removeSector(id) {
-      return this.getSectors().remove(this.getSector(id));
+      return this.getSectors().remove(this.getSector(id, { warn: 1 }));
     },
 
     /**
@@ -172,6 +175,7 @@ module.exports = () => {
      * @param {Array<Object>} [property.properties=[]] Nested properties for composite and stack type
      * @param {Array<Object>} [property.layers=[]] Layers for stack properties
      * @param {Array<Object>} [property.list=[]] List of possible options for radio and select types
+     * @param  {Object} [options={}] Options
      * @return {Property|null} Added Property or `null` in case sector doesn't exist
      * @example
      * var property = styleManager.addProperty('mySector',{
@@ -186,13 +190,13 @@ module.exports = () => {
      *      value: '200px',
      *      name: '200',
      *    }],
-     * });
+     * }, { at: 0 });
+     * // With `at: 0` we place the new property at the beginning of the collection
      */
-    addProperty(sectorId, property) {
-      var prop = null;
-      var sector = this.getSector(sectorId);
-
-      if (sector) prop = sector.get('properties').add(property);
+    addProperty(sectorId, property, opts = {}) {
+      const sector = this.getSector(sectorId, { warn: 1 });
+      let prop = null;
+      if (sector) prop = sector.get('properties').add(property, opts);
 
       return prop;
     },
@@ -206,8 +210,8 @@ module.exports = () => {
      * var property = styleManager.getProperty('mySector','min-height');
      */
     getProperty(sectorId, name) {
-      var prop = null;
-      var sector = this.getSector(sectorId);
+      const sector = this.getSector(sectorId, { warn: 1 });
+      let prop = null;
 
       if (sector) {
         prop = sector.get('properties').where({ property: name });
@@ -238,9 +242,8 @@ module.exports = () => {
      * var properties = styleManager.getProperties('mySector');
      */
     getProperties(sectorId) {
-      var props = null;
-      var sector = this.getSector(sectorId);
-
+      let props = null;
+      const sector = this.getSector(sectorId, { warn: 1 });
       if (sector) props = sector.get('properties');
 
       return props;
@@ -254,8 +257,9 @@ module.exports = () => {
      * @param  {Model} model
      * @return {Model}
      */
-    getModelToStyle(model) {
+    getModelToStyle(model, options = {}) {
       const em = c.em;
+      const { skipAdd } = options;
       const classes = model.get('classes');
       const id = model.getId();
 
@@ -263,9 +267,12 @@ module.exports = () => {
         const config = em.getConfig();
         const um = em.get('UndoManager');
         const cssC = em.get('CssComposer');
-        const state = !config.devicePreviewMode ? model.get('state') : '';
+        const sm = em.get('SelectorManager');
+        const smConf = sm ? sm.getConfig() : {};
+        const state = !config.devicePreviewMode ? em.get('state') : '';
         const valid = classes.getStyleable();
         const hasClasses = valid.length;
+        const useClasses = !smConf.componentFirst || options.useClasses;
         const opts = { state };
         let rule;
 
@@ -275,16 +282,16 @@ module.exports = () => {
         // #268
         um.stop();
 
-        if (hasClasses) {
+        if (hasClasses && useClasses) {
           const deviceW = em.getCurrentMedia();
           rule = cssC.get(valid, state, deviceW);
 
-          if (!rule) {
+          if (!rule && !skipAdd) {
             rule = cssC.add(valid, state, deviceW);
           }
         } else if (config.avoidInlineStyle) {
           rule = cssC.getIdRule(id, opts);
-          !rule && (rule = cssC.setIdRule(id, {}, opts));
+          !rule && !skipAdd && (rule = cssC.setIdRule(id, {}, opts));
           if (model.is('wrapper')) rule.set('wrapper', 1);
         }
 
@@ -382,6 +389,11 @@ module.exports = () => {
      * */
     render() {
       return SectView.render().el;
+    },
+
+    _logNoSector(sectorId) {
+      const { em } = this;
+      em && em.logWarning(`'${sectorId}' sector not found`);
     }
   };
 };

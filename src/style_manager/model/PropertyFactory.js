@@ -1,6 +1,4 @@
-var Backbone = require('backbone');
-
-module.exports = () => ({
+export default () => ({
   /**
    * Build props object by their name
    * @param  {Array<string>|string} props Array of properties name
@@ -26,6 +24,10 @@ module.exports = () => ({
 
       // Fixed values
       switch (prop) {
+        case 'top':
+        case 'right':
+        case 'bottom':
+        case 'left':
         case 'margin-top':
         case 'margin-right':
         case 'margin-bottom':
@@ -172,7 +174,6 @@ module.exports = () => ({
       switch (prop) {
         case 'float':
         case 'background-color':
-        case 'background-image':
         case 'text-shadow':
           obj.defaults = 'none';
           break;
@@ -200,10 +201,6 @@ module.exports = () => ({
         case 'position':
           obj.defaults = 'static';
           break;
-        case 'top':
-        case 'right':
-        case 'bottom':
-        case 'left':
         case 'margin-top':
         case 'margin-right':
         case 'margin-bottom':
@@ -242,6 +239,10 @@ module.exports = () => ({
         case 'box-shadow-blur':
           obj.defaults = '5px';
           break;
+        case 'top':
+        case 'right':
+        case 'bottom':
+        case 'left':
         case 'min-height':
         case 'min-width':
         case 'max-height':
@@ -547,7 +548,7 @@ module.exports = () => ({
             'Comic Sans MS, cursive' + ss,
             'Courier New, Courier, monospace',
             'Georgia, serif',
-            'Helvetica, serif',
+            'Helvetica' + ss,
             'Impact, Charcoal' + ss,
             'Lucida Sans Unicode, Lucida Grande' + ss,
             'Tahoma, Geneva' + ss,
@@ -720,8 +721,8 @@ module.exports = () => ({
           obj.properties = this.build([
             'border-top-left-radius',
             'border-top-right-radius',
-            'border-bottom-left-radius',
-            'border-bottom-right-radius'
+            'border-bottom-right-radius',
+            'border-bottom-left-radius'
           ]);
           break;
         case 'box-shadow':

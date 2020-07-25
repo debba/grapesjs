@@ -1,12 +1,18 @@
 import { each } from 'underscore';
 
-module.exports = {
+const cmdVis = 'sw-visibility';
+
+export default {
   getPanels(editor) {
     if (!this.panels) {
-      this.panels = editor.Panels.getPanelsEl();
+      this.panels = editor.Panels.getPanels();
     }
 
     return this.panels;
+  },
+
+  preventDrag(opts) {
+    opts.abort = 1;
   },
 
   tglPointers(editor, val) {
@@ -15,10 +21,21 @@ module.exports = {
     each(elP, item => (item.style.pointerEvents = val ? '' : 'all'));
   },
 
+  tglEffects(on) {
+    const mthEv = on ? 'on' : 'off';
+    this.em[mthEv]('run:tlb-move:before', this.preventDrag);
+  },
+
   run(editor, sender) {
     this.sender = sender;
-    editor.stopCommand('sw-visibility');
+
+    if (!this.shouldRunSwVisibility) {
+      this.shouldRunSwVisibility = editor.Commands.isActive(cmdVis);
+    }
+
+    this.shouldRunSwVisibility && editor.stopCommand(cmdVis);
     editor.getModel().stopDefault();
+
     const panels = this.getPanels(editor);
     const canvas = editor.Canvas.getElement();
     const editorEl = editor.getEl();
@@ -28,13 +45,15 @@ module.exports = {
       const helper = document.createElement('span');
       helper.className = `${pfx}off-prv fa fa-eye-slash`;
       editorEl.appendChild(helper);
-      helper.onclick = () => editor.stopCommand('preview');
+      helper.onclick = () => this.stopCommand();
       this.helper = helper;
     }
 
     this.helper.style.display = 'inline-block';
     this.tglPointers(editor);
-    panels.style.display = 'none';
+
+    panels.forEach(panel => panel.set('visible', false));
+
     const canvasS = canvas.style;
     canvasS.width = '100%';
     canvasS.height = '100%';
@@ -43,15 +62,22 @@ module.exports = {
     canvasS.padding = '0';
     canvasS.margin = '0';
     editor.refresh();
+    this.tglEffects(1);
   },
 
   stop(editor) {
     const { sender = {} } = this;
     sender.set && sender.set('active', 0);
     const panels = this.getPanels(editor);
-    editor.runCommand('sw-visibility');
+
+    if (this.shouldRunSwVisibility) {
+      editor.runCommand(cmdVis);
+      this.shouldRunSwVisibility = false;
+    }
+
     editor.getModel().runDefault();
-    panels.style.display = '';
+    panels.forEach(panel => panel.set('visible', true));
+
     const canvas = editor.Canvas.getElement();
     canvas.setAttribute('style', '');
 
@@ -61,5 +87,6 @@ module.exports = {
 
     editor.refresh();
     this.tglPointers(editor, 1);
+    this.tglEffects();
   }
 };

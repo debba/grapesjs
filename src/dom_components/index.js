@@ -28,103 +28,142 @@
  * @module DomComponents
  */
 import Backbone from 'backbone';
-import { isEmpty, isString, isObject, isArray, result } from 'underscore';
+import { isEmpty, isObject, isArray, result } from 'underscore';
+import defaults from './config/config';
+import Component from './model/Component';
+import Components from './model/Components';
+import ComponentView from './view/ComponentView';
+import ComponentsView from './view/ComponentsView';
+import ComponentTableCell from './model/ComponentTableCell';
+import ComponentTableCellView from './view/ComponentTableCellView';
+import ComponentTableRow from './model/ComponentTableRow';
+import ComponentTableRowView from './view/ComponentTableRowView';
+import ComponentTable from './model/ComponentTable';
+import ComponentTableView from './view/ComponentTableView';
+import ComponentTableHead from './model/ComponentTableHead';
+import ComponentTableHeadView from './view/ComponentTableHeadView';
+import ComponentTableBody from './model/ComponentTableBody';
+import ComponentTableBodyView from './view/ComponentTableBodyView';
+import ComponentTableFoot from './model/ComponentTableFoot';
+import ComponentTableFootView from './view/ComponentTableFootView';
+import ComponentMap from './model/ComponentMap';
+import ComponentMapView from './view/ComponentMapView';
+import ComponentLink from './model/ComponentLink';
+import ComponentLinkView from './view/ComponentLinkView';
+import ComponentLabel from './model/ComponentLabel';
+import ComponentLabelView from './view/ComponentLabelView';
+import ComponentVideo from './model/ComponentVideo';
+import ComponentVideoView from './view/ComponentVideoView';
+import ComponentImage from './model/ComponentImage';
+import ComponentImageView from './view/ComponentImageView';
+import ComponentScript from './model/ComponentScript';
+import ComponentScriptView from './view/ComponentScriptView';
+import ComponentSvg from './model/ComponentSvg';
+import ComponentSvgIn from './model/ComponentSvgIn';
+import ComponentSvgView from './view/ComponentSvgView';
+import ComponentComment from './model/ComponentComment';
+import ComponentCommentView from './view/ComponentCommentView';
+import ComponentTextNode from './model/ComponentTextNode';
+import ComponentTextNodeView from './view/ComponentTextNodeView';
+import ComponentText from './model/ComponentText';
+import ComponentTextView from './view/ComponentTextView';
+import ComponentWrapper from './model/ComponentWrapper';
 
-module.exports = () => {
+export default () => {
   var c = {};
   let em;
-  const defaults = require('./config/config');
-  const Component = require('./model/Component');
-  const ComponentView = require('./view/ComponentView');
-  const Components = require('./model/Components');
-  const ComponentsView = require('./view/ComponentsView');
   const componentsById = {};
 
   var component, componentView;
   var componentTypes = [
     {
       id: 'cell',
-      model: require('./model/ComponentTableCell'),
-      view: require('./view/ComponentTableCellView')
+      model: ComponentTableCell,
+      view: ComponentTableCellView
     },
     {
       id: 'row',
-      model: require('./model/ComponentTableRow'),
-      view: require('./view/ComponentTableRowView')
+      model: ComponentTableRow,
+      view: ComponentTableRowView
     },
     {
       id: 'table',
-      model: require('./model/ComponentTable'),
-      view: require('./view/ComponentTableView')
+      model: ComponentTable,
+      view: ComponentTableView
     },
     {
       id: 'thead',
-      model: require('./model/ComponentTableHead'),
-      view: require('./view/ComponentTableHeadView')
+      model: ComponentTableHead,
+      view: ComponentTableHeadView
     },
     {
       id: 'tbody',
-      model: require('./model/ComponentTableBody'),
-      view: require('./view/ComponentTableBodyView')
+      model: ComponentTableBody,
+      view: ComponentTableBodyView
     },
     {
       id: 'tfoot',
-      model: require('./model/ComponentTableFoot'),
-      view: require('./view/ComponentTableFootView')
+      model: ComponentTableFoot,
+      view: ComponentTableFootView
     },
     {
       id: 'map',
-      model: require('./model/ComponentMap'),
-      view: require('./view/ComponentMapView')
+      model: ComponentMap,
+      view: ComponentMapView
     },
     {
       id: 'link',
-      model: require('./model/ComponentLink'),
-      view: require('./view/ComponentLinkView')
+      model: ComponentLink,
+      view: ComponentLinkView
     },
     {
       id: 'label',
-      model: require('./model/ComponentLabel'),
-      view: require('./view/ComponentLabelView')
+      model: ComponentLabel,
+      view: ComponentLabelView
     },
     {
       id: 'video',
-      model: require('./model/ComponentVideo'),
-      view: require('./view/ComponentVideoView')
+      model: ComponentVideo,
+      view: ComponentVideoView
     },
     {
       id: 'image',
-      model: require('./model/ComponentImage'),
-      view: require('./view/ComponentImageView')
+      model: ComponentImage,
+      view: ComponentImageView
     },
     {
       id: 'script',
-      model: require('./model/ComponentScript'),
-      view: require('./view/ComponentScriptView')
+      model: ComponentScript,
+      view: ComponentScriptView
+    },
+    {
+      id: 'svg-in',
+      model: ComponentSvgIn,
+      view: ComponentSvgView
     },
     {
       id: 'svg',
-      model: require('./model/ComponentSvg'),
-      view: require('./view/ComponentSvgView')
+      model: ComponentSvg,
+      view: ComponentSvgView
     },
     {
       id: 'comment',
-      model: require('./model/ComponentComment'),
-      view: require('./view/ComponentCommentView')
+      model: ComponentComment,
+      view: ComponentCommentView
     },
     {
       id: 'textnode',
-      model: require('./model/ComponentTextNode'),
-      view: require('./view/ComponentTextNodeView')
+      model: ComponentTextNode,
+      view: ComponentTextNodeView
     },
     {
       id: 'text',
-      model: require('./model/ComponentText'),
-      view: require('./view/ComponentTextView')
+      model: ComponentText,
+      view: ComponentTextView
     },
     {
       id: 'wrapper',
-      model: require('./model/ComponentWrapper'),
+      model: ComponentWrapper,
       view: ComponentView
     },
     {
@@ -305,12 +344,13 @@ module.exports = () => {
         const handleChanges = this.handleChanges.bind(this);
         const handleRemoves = this.handleRemoves.bind(this);
         um.add(coll);
-        [[coll, 'add', handleChanges], [coll, 'remove', handleRemoves]].forEach(
-          els => {
-            em.stopListening(els[0], els[1], els[2]);
-            em.listenTo(els[0], els[1], els[2]);
-          }
-        );
+        [
+          [coll, 'add', handleChanges],
+          [coll, 'remove', handleRemoves]
+        ].forEach(els => {
+          em.stopListening(els[0], els[1], els[2]);
+          em.listenTo(els[0], els[1], els[2]);
+        });
       }
     },
 
@@ -470,6 +510,7 @@ module.exports = () => {
      * @param {string} [component.content=''] String inside component
      * @param {Object} [component.style={}] Style object
      * @param {Object} [component.attributes={}] Attribute object
+     * @param {Object} opt the options object to be used by the [Components.add]{@link getComponents} method
      * @return {Component|Array<Component>} Component/s added
      * @example
      * // Example of a new component with some extra property
@@ -483,8 +524,8 @@ module.exports = () => {
      *   attributes: { title: 'here' }
      * });
      */
-    addComponent(component) {
-      return this.getComponents().add(component);
+    addComponent(component, opt = {}) {
+      return this.getComponents().add(component, opt);
     },
 
     /**
@@ -512,11 +553,12 @@ module.exports = () => {
     /**
      * Set components
      * @param {Object|string} components HTML string or components model
+     * @param {Object} opt the options object to be used by the {@link addComponent} method
      * @return {this}
      * @private
      */
-    setComponents(components) {
-      this.clear().addComponent(components);
+    setComponents(components, opt = {}) {
+      this.clear().addComponent(components, opt);
     },
 
     /**
@@ -688,6 +730,10 @@ module.exports = () => {
         });
 
       model && isEmpty(model.get('status')) && model.set('status', state);
+    },
+
+    allById() {
+      return componentsById;
     }
   };
 };

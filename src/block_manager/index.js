@@ -26,13 +26,13 @@
  * @module BlockManager
  */
 import { isElement } from 'underscore';
+import defaults from './config/config';
+import Blocks from './model/Blocks';
+import BlockCategories from './model/Categories';
+import BlocksView from './view/BlocksView';
 
-module.exports = () => {
-  var c = {},
-    defaults = require('./config/config'),
-    Blocks = require('./model/Blocks'),
-    BlockCategories = require('./model/Categories'),
-    BlocksView = require('./view/BlocksView');
+export default () => {
+  var c = {};
   var blocks, blocksVisible, blocksView;
   var categories = [];
 
@@ -64,13 +64,6 @@ module.exports = () => {
       blocks = new Blocks([]);
       blocksVisible = new Blocks([]);
       categories = new BlockCategories();
-      blocksView = new BlocksView(
-        {
-          collection: blocksVisible,
-          categories
-        },
-        c
-      );
 
       // Setup the sync between the global and public collections
       blocks.listenTo(blocks, 'add', model => {
@@ -106,12 +99,18 @@ module.exports = () => {
       !blocks.length && blocks.reset(c.blocks);
     },
 
+    /**
+     * Executed once the main editor instance is rendered
+     * @private
+     */
     postRender() {
+      const collection = blocksVisible;
+      blocksView = new BlocksView({ collection, categories }, c);
       const elTo = this.getConfig().appendTo;
 
       if (elTo) {
         const el = isElement(elTo) ? elTo : document.querySelector(elTo);
-        el.appendChild(this.render());
+        el.appendChild(this.render(blocksVisible.models));
       }
     },
 
@@ -234,25 +233,23 @@ module.exports = () => {
       const toRender = blocks || this.getAll().models;
 
       if (opts.external) {
+        const collection = new Blocks(toRender);
         return new BlocksView(
-          {
-            collection: new Blocks(toRender),
-            categories
-          },
-          {
-            ...c,
-            ...opts
-          }
+          { collection, categories },
+          { ...c, ...opts }
         ).render().el;
       }
 
-      if (!blocksView.rendered) {
-        blocksView.render();
-        blocksView.rendered = 1;
+      if (blocksView) {
+        blocksView.updateConfig(opts);
+        blocksView.collection.reset(toRender);
+
+        if (!blocksView.rendered) {
+          blocksView.render();
+          blocksView.rendered = 1;
+        }
       }
 
-      blocksView.updateConfig(opts);
-      blocksView.collection.reset(toRender);
       return this.getContainer();
     }
   };

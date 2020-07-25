@@ -136,7 +136,7 @@ editor.BlockManager.add('my-block-id', {
         // use `content` for static strings, `components` string will be parsed
         // and transformed in Components
         components: '<span>HTML at some point</span>',
-      }      
+      }
     ]
   }
 })
@@ -597,7 +597,7 @@ editor.setDevice('Mobile');
 ```
 
 ::: tip
-Check out the [Device Manager API](api/panels.html) to see all the available methods
+Check out the [Device Manager API](api/device_manager.html) to see all the available methods
 :::
 
 ## Store & load data

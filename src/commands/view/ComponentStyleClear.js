@@ -1,11 +1,11 @@
 import { isArray } from 'underscore';
 
-module.exports = {
+export default {
   run(ed, sender, opts = {}) {
     const { target } = opts;
     const dc = ed.DomComponents;
     const type = target.get('type');
-    const len = dc.getWrapper().find(`[data-gjs-type="${type}"]`).length;
+    const len = dc.getWrapper().findType(type).length;
     const toRemove = [];
 
     if (!len) {

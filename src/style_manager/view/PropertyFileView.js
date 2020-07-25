@@ -1,19 +1,19 @@
 import { isString } from 'underscore';
 import Backbone from 'backbone';
-const PropertyView = require('./PropertyView');
+import PropertyView from './PropertyView';
+
 const $ = Backbone.$;
 
-module.exports = PropertyView.extend({
+export default PropertyView.extend({
   templateInput() {
-    const pfx = this.pfx;
-    const ppfx = this.ppfx;
-    const assetsLabel = this.config.assetsLabel || 'Images';
+    const { pfx, em } = this;
+
     return `
     <div class="${pfx}field ${pfx}file">
       <div id='${pfx}input-holder'>
         <div class="${pfx}btn-c">
           <button class="${pfx}btn" id="${pfx}images" type="button">
-            ${assetsLabel}
+            ${em.t('styleManager.fileButton')}
           </button>
         </div>
         <div style="clear:both;"></div>
@@ -73,6 +73,7 @@ module.exports = PropertyView.extend({
   setPreviewView(v) {
     const pv = this.$previewBox;
     pv && pv[v ? 'addClass' : 'removeClass'](`${this.pfx}show`);
+    pv && pv.css({ display: v ? 'block' : 'none' });
   },
 
   /**

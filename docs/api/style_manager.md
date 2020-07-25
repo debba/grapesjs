@@ -52,6 +52,8 @@ that one will be returned
     -   `sector.name` **[string][17]** Sector's label (optional, default `''`)
     -   `sector.open` **[Boolean][18]** Indicates if the sector should be opened (optional, default `true`)
     -   `sector.properties` **[Array][19]&lt;[Object][16]>** Array of properties (optional, default `[]`)
+-   `opts`   (optional, default `{}`)
+-   `options` **[Object][16]** Options (optional, default `{}`)
 
 ### Examples
 
@@ -60,7 +62,8 @@ var sector = styleManager.addSector('mySector',{
   name: 'My sector',
   open: true,
   properties: [{ name: 'My property'}]
-});
+}, { at: 0 });
+// With `at: 0` we place the new sector at the beginning of the collection
 ```
 
 Returns **Sector** Added Sector
@@ -72,6 +75,7 @@ Get sector by id
 ### Parameters
 
 -   `id` **[string][17]** Sector id
+-   `opts`   (optional, default `{}`)
 
 ### Examples
 
@@ -126,6 +130,8 @@ Add property to the sector identified by id
     -   `property.properties` **[Array][19]&lt;[Object][16]>** Nested properties for composite and stack type (optional, default `[]`)
     -   `property.layers` **[Array][19]&lt;[Object][16]>** Layers for stack properties (optional, default `[]`)
     -   `property.list` **[Array][19]&lt;[Object][16]>** List of possible options for radio and select types (optional, default `[]`)
+-   `opts`   (optional, default `{}`)
+-   `options` **[Object][16]** Options (optional, default `{}`)
 
 ### Examples
 
@@ -142,7 +148,8 @@ var property = styleManager.addProperty('mySector',{
      value: '200px',
      name: '200',
    }],
-});
+}, { at: 0 });
+// With `at: 0` we place the new property at the beginning of the collection
 ```
 
 Returns **(Property | null)** Added Property or `null` in case sector doesn't exist
@@ -207,6 +214,7 @@ one or more classes, the function will return the corresponding CSS Rule
 ### Parameters
 
 -   `model` **Model** 
+-   `options`   (optional, default `{}`)
 
 Returns **Model** 
 

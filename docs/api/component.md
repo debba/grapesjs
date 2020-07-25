@@ -48,6 +48,8 @@ component.get('tagName');
 -   `content` **[String][1]?** Content of the component (not escaped) which will be appended before children rendering. Default: `''`
 -   `icon` **[String][1]?** Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="fa fa-square-o"></i>'. Default: `''`
 -   `script` **([String][1] \| [Function][6])?** Component's javascript. More about it [here][7]. Default: `''`
+-   `script-export` **([String][1] \| [Function][6])?** You can specify javascript available only in export functions (eg. when you get the HTML).
+    If this property is defined it will overwrite the `script` one (in export functions). Default: `''`
 -   `traits` **[Array][4]&lt;([Object][2] \| [String][1])>?** Component's traits. More about it [here][8]. Default: `['id', 'title']`
 -   `propagate` **[Array][4]&lt;[String][1]>?** Indicates an array of properties which will be inhereted by all NEW appended children.
      For example if you create a component likes this: `{ removable: false, draggable: false, propagate: ['removable', 'draggable'] }`
@@ -92,11 +94,28 @@ component.is('image')
 
 Returns **[Boolean][3]** 
 
+## props
+
+Return all the propeties
+
+Returns **[Object][2]** 
+
 ## index
 
 Get the index of the component in the parent collection.
 
 Returns **[Number][10]** 
+
+## setDragMode
+
+Change the drag mode of the component.
+To get more about this feature read: [https://github.com/artf/grapesjs/issues/1936][11]
+
+### Parameters
+
+-   `value` **[String][1]** Drag mode, options: 'absolute' | 'translate'
+
+Returns **this** 
 
 ## find
 
@@ -118,13 +137,13 @@ Returns **[Array][4]** Array of components
 
 ## findType
 
-Find all inner components by component id.
+Find all inner components by component type.
 The advantage of this method over `find` is that you can use it
 also before rendering the component
 
 ### Parameters
 
--   `id` **[String][1]** Component id
+-   `type` **[String][1]** Component type
 
 ### Examples
 
@@ -152,6 +171,25 @@ component.closest('div.some-class');
 ```
 
 Returns **[Component][9]** 
+
+## closestType
+
+Find the closest parent component by its type.
+The advantage of this method over `closest` is that you can use it
+also before rendering the component
+
+### Parameters
+
+-   `type` **[String][1]** Component type
+
+### Examples
+
+```javascript
+const Section = component.closestType('section');
+console.log(Section);
+```
+
+Returns **[Component][9]** Found component, otherwise `undefined`
 
 ## replaceWith
 
@@ -340,6 +378,16 @@ console.log(collection.length);
 
 Returns **(Collection | [Array][4]&lt;[Component][9]>)** 
 
+## empty
+
+Remove all inner components
+
+-   @return {this}
+
+### Parameters
+
+-   `opts`   (optional, default `{}`)
+
 ## parent
 
 Get the parent component, if exists
@@ -437,12 +485,12 @@ Add trait/s by id/s.
 ### Examples
 
 ```javascript
-component.addTrat('title', { at: 1 }); // Add title trait (`at` option is the position index)
-component.addTrat({
+component.addTrait('title', { at: 1 }); // Add title trait (`at` option is the position index)
+component.addTrait({
  type: 'checkbox',
  name: 'disabled',
 });
-component.addTrat(['title', {...}, ...]);
+component.addTrait(['title', {...}, ...]);
 ```
 
 Returns **[Array][4]** Array of added traits
@@ -466,6 +514,7 @@ Return HTML string of the component
 ### Parameters
 
 -   `opts` **[Object][2]** Options (optional, default `{}`)
+    -   `opts.tag` **[String][1]?** Custom tagName
     -   `opts.attributes` **([Object][2] \| [Function][6])** You can pass an object of custom attributes to replace
         with the current one or you can even pass a function to generate attributes dynamically (optional, default `null`)
 
@@ -509,6 +558,7 @@ Set new id on the component
 ### Parameters
 
 -   `id` **[String][1]** 
+-   `opts`  
 
 Returns **this** 
 
@@ -517,12 +567,20 @@ Returns **this**
 Get the DOM element of the component.
 This works only if the component is already rendered
 
-Returns **[HTMLElement][11]** 
+### Parameters
+
+-   `frame` **Frame** Specific frame from which taking the element
+
+Returns **[HTMLElement][12]** 
 
 ## getView
 
 Get the View of the component.
 This works only if the component is already rendered
+
+### Parameters
+
+-   `frame` **Frame** Get View of a specific frame
 
 Returns **ComponentView** 
 
@@ -592,4 +650,6 @@ This method is used in Components.js just after the parsing
 
 [10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[11]: https://developer.mozilla.org/docs/Web/HTML/Element
+[11]: https://github.com/artf/grapesjs/issues/1936
+
+[12]: https://developer.mozilla.org/docs/Web/HTML/Element

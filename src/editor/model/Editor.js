@@ -1,15 +1,21 @@
 import {
   isUndefined,
-  defaults,
+  isFunction,
   isArray,
   contains,
   toArray,
-  keys
+  keys,
+  bindAll
 } from 'underscore';
+import $ from 'cash-dom';
+import Backbone from 'backbone';
+import Extender from 'utils/extender';
 import { getModel } from 'utils/mixins';
 
+Backbone.$ = $;
 const deps = [
   require('utils'),
+  require('i18n'),
   require('keymaps'),
   require('undo_manager'),
   require('storage_manager'),
@@ -31,17 +37,15 @@ const deps = [
   require('block_manager')
 ];
 
-const Backbone = require('backbone');
 const { Collection } = Backbone;
 let timedInterval;
 let updateItr;
 
-require('utils/extender')({
+Extender({
   Backbone: Backbone,
   $: Backbone.$
 });
 
-const $ = Backbone.$;
 const logs = {
   debug: console.log,
   info: console.info,
@@ -49,7 +53,7 @@ const logs = {
   error: console.error
 };
 
-module.exports = Backbone.Model.extend({
+export default Backbone.Model.extend({
   defaults() {
     return {
       editing: 0,
@@ -73,9 +77,12 @@ module.exports = Backbone.Model.extend({
     this.set('modules', []);
     this.set('toLoad', []);
     this.set('storables', []);
+    this.set('selected', new Collection());
+    this.set('dmode', c.dragMode);
     const el = c.el;
     const log = c.log;
     const toLog = log === true ? keys(logs) : isArray(log) ? log : [];
+    bindAll(this, 'initBaseColorPicker');
 
     if (el && c.fromElement) this.config.components = el.innerHTML;
     this.attrsOrig = el
@@ -181,7 +188,8 @@ module.exports = Backbone.Model.extend({
    */
   loadModule(moduleName) {
     const { config } = this;
-    const Mod = new moduleName();
+    const Module = moduleName.default || moduleName;
+    const Mod = new Module();
     const name = Mod.name.charAt(0).toLowerCase() + Mod.name.slice(1);
     const cfgParent = !isUndefined(config[name])
       ? config[name]
@@ -196,9 +204,9 @@ module.exports = Backbone.Model.extend({
 
     if (Mod.storageKey && Mod.store && Mod.load && sm) {
       cfg.stm = sm;
-      const storables = this.get('storables');
-      storables.push(Mod);
-      this.set('storables', storables);
+      // DomComponents should be load before CSS Composer
+      const mth = name == 'domComponents' ? 'unshift' : 'push';
+      this.get('storables')[mth](Mod);
     }
 
     cfg.em = this;
@@ -217,7 +225,11 @@ module.exports = Backbone.Model.extend({
    * @return {this}
    * @private
    */
-  init(editor) {
+  init(editor, opts = {}) {
+    if (this.destroyed) {
+      this.initialize(opts);
+      this.destroyed = 0;
+    }
     this.set('Editor', editor);
   },
 
@@ -285,7 +297,6 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   setSelected(el, opts = {}) {
-    const { scroll } = opts;
     const multiple = isArray(el);
     const els = multiple ? el : [el];
     const selected = this.get('selected');
@@ -302,8 +313,6 @@ module.exports = Backbone.Model.extend({
       this.addSelected(model, opts);
       added = model;
     });
-
-    scroll && added && this.get('Canvas').scrollTo(added, scroll);
   },
 
   /**
@@ -366,14 +375,19 @@ module.exports = Backbone.Model.extend({
     this.set('componentHovered', model, opts);
   },
 
+  getHovered() {
+    return this.get('componentHovered');
+  },
+
   /**
    * Set components inside editor's canvas. This method overrides actual components
    * @param {Object|string} components HTML string or components model
+   * @param {Object} opt the options object to be used by the [setComponents]{@link setComponents} method
    * @return {this}
    * @private
    */
-  setComponents(components) {
-    return this.get('DomComponents').setComponents(components);
+  setComponents(components, opt = {}) {
+    return this.get('DomComponents').setComponents(components, opt);
   },
 
   /**
@@ -394,13 +408,14 @@ module.exports = Backbone.Model.extend({
   /**
    * Set style inside editor's canvas. This method overrides actual style
    * @param {Object|string} style CSS string or style model
+   * @param {Object} opt the options object to be used by the [CssRules.add]{@link rules#add} method
    * @return {this}
    * @private
    */
-  setStyle(style) {
+  setStyle(style, opt = {}) {
     var rules = this.get('CssComposer').getAll();
     for (var i = 0, len = rules.length; i < len; i++) rules.pop();
-    rules.add(style);
+    rules.add(style, opt);
     return this;
   },
 
@@ -414,6 +429,24 @@ module.exports = Backbone.Model.extend({
   },
 
   /**
+   * Change the selector state
+   * @param {String} value State value
+   * @returns {this}
+   */
+  setState(value) {
+    this.set('state', value);
+    return this;
+  },
+
+  /**
+   * Get the current selector state
+   * @returns {String}
+   */
+  getState() {
+    return this.get('state');
+  },
+
+  /**
    * Returns HTML built inside canvas
    * @return {string} HTML string
    * @private
@@ -421,12 +454,12 @@ module.exports = Backbone.Model.extend({
   getHtml() {
     const config = this.config;
     const exportWrapper = config.exportWrapper;
-    const wrappesIsBody = config.wrappesIsBody;
+    const wrapperIsBody = config.wrapperIsBody;
     const js = config.jsInHtml ? this.getJs() : '';
     var wrp = this.get('DomComponents').getComponent();
     var html = this.get('CodeManager').getCode(wrp, 'html', {
       exportWrapper,
-      wrappesIsBody
+      wrapperIsBody
     });
     html += js ? `<script>${js}</script>` : '';
     return html;
@@ -440,7 +473,7 @@ module.exports = Backbone.Model.extend({
    */
   getCss(opts = {}) {
     const config = this.config;
-    const wrappesIsBody = config.wrappesIsBody;
+    const wrapperIsBody = config.wrapperIsBody;
     const avoidProt = opts.avoidProtected;
     const keepUnusedStyles = !isUndefined(opts.keepUnusedStyles)
       ? opts.keepUnusedStyles
@@ -453,7 +486,7 @@ module.exports = Backbone.Model.extend({
       protCss +
       this.get('CodeManager').getCode(wrp, 'css', {
         cssc,
-        wrappesIsBody,
+        wrapperIsBody,
         keepUnusedStyles
       })
     );
@@ -517,26 +550,23 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   getCacheLoad(force, clb) {
-    var f = force ? 1 : 0;
-    if (this.cacheLoad && !f) return this.cacheLoad;
-    var sm = this.get('StorageManager');
-    var load = [];
+    if (this.cacheLoad && !force) return this.cacheLoad;
+    const sm = this.get('StorageManager');
+    const load = [];
 
     if (!sm) return {};
 
     this.get('storables').forEach(m => {
-      var key = m.storageKey;
-      key = typeof key === 'function' ? key() : key;
-      var keys = key instanceof Array ? key : [key];
-      keys.forEach(k => {
-        load.push(k);
-      });
+      let key = m.storageKey;
+      key = isFunction(key) ? key() : key;
+      const keys = isArray(key) ? key : [key];
+      keys.forEach(k => load.push(k));
     });
 
     sm.load(load, res => {
       this.cacheLoad = res;
       clb && clb(res);
-      setTimeout(() => this.trigger('storage:load', res), 0);
+      setTimeout(() => this.trigger('storage:load', res));
     });
   },
 
@@ -569,7 +599,8 @@ module.exports = Backbone.Model.extend({
    * @private
    */
   stopDefault(opts = {}) {
-    var command = this.get('Commands').get(this.config.defaultCommand);
+    const commands = this.get('Commands');
+    const command = commands.get(this.config.defaultCommand);
     if (!command) return;
     command.stop(this, this, opts);
     this.defaultRunning = 0;
@@ -616,6 +647,18 @@ module.exports = Backbone.Model.extend({
     return this.get('DomComponents').getWrapper();
   },
 
+  setCurrentFrame(frameView) {
+    return this.set('currentFrame', frameView);
+  },
+
+  getCurrentFrame() {
+    return this.get('currentFrame');
+  },
+
+  getCurrentFrameModel() {
+    return (this.getCurrentFrame() || {}).model;
+  },
+
   /**
    * Return the count of changes made to the content and not yet stored.
    * This count resets at any `store()`
@@ -627,6 +670,18 @@ module.exports = Backbone.Model.extend({
 
   getZoomDecimal() {
     return this.get('Canvas').getZoomDecimal();
+  },
+
+  getZoomMultiplier() {
+    return this.get('Canvas').getZoomMultiplier();
+  },
+
+  setDragMode(value) {
+    return this.set('dmode', value);
+  },
+
+  t(...args) {
+    return this.get('I18n').t(...args);
   },
 
   /**
@@ -641,23 +696,32 @@ module.exports = Backbone.Model.extend({
    * Destroy editor
    */
   destroyAll() {
+    const { config } = this;
+    const editor = this.getEditor();
+    const { editors = [] } = config.grapesjs || {};
     const {
       DomComponents,
       CssComposer,
       UndoManager,
       Panels,
       Canvas,
-      Keymaps
+      Keymaps,
+      RichTextEditor
     } = this.attributes;
+    this.stopDefault();
     DomComponents.clear();
     CssComposer.clear();
     UndoManager.clear().removeAll();
     Panels.getPanels().reset();
     Canvas.getCanvasView().remove();
     Keymaps.removeAll();
+    RichTextEditor.destroy();
     this.view.remove();
     this.stopListening();
-    $(this.config.el)
+    this.clear({ silent: true });
+    this.destroyed = 1;
+    editors.splice(editors.indexOf(editor), 1);
+    $(config.el)
       .empty()
       .attr(this.attrsOrig);
   },
@@ -693,6 +757,26 @@ module.exports = Backbone.Model.extend({
 
   logError(msg, opts) {
     this.log(msg, { ...opts, level: 'error' });
+  },
+
+  initBaseColorPicker(el, opts = {}) {
+    const config = this.getConfig();
+    const { colorPicker = {} } = config;
+    const elToAppend = config.el;
+    const ppfx = config.stylePrefix;
+
+    return $(el).spectrum({
+      containerClassName: `${ppfx}one-bg ${ppfx}two-color`,
+      appendTo: elToAppend || 'body',
+      maxSelectionSize: 8,
+      showPalette: true,
+      palette: [],
+      showAlpha: true,
+      chooseText: 'Ok',
+      cancelText: '⨯',
+      ...opts,
+      ...colorPicker
+    });
   },
 
   /**

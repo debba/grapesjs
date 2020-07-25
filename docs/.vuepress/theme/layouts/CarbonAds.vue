@@ -1,5 +1,5 @@
 <script>
-module.exports = {
+export default {
   render (h) {
     return h('div', { class: 'carbon-ads', attrs: { id: 'native-carbon' }})
   },
@@ -47,11 +47,10 @@ module.exports = {
     }
   }
 }
+// @import "~@default-theme/styles/config.styl"
 </script>
 
 <style lang="stylus">
-@import "~@default-theme/styles/config.styl"
-
 .carbon-ads
   min-height 102px
   padding 1.5rem 1.5rem 0

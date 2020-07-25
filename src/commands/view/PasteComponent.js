@@ -1,6 +1,6 @@
 import { isArray, contains } from 'underscore';
 
-module.exports = {
+export default {
   run(ed) {
     const em = ed.getModel();
     const clp = em.get('clipboard');
@@ -17,7 +17,10 @@ module.exports = {
         if (contains(clp, comp) && comp.get('copyable')) {
           added = coll.add(comp.clone(), { at });
         } else {
-          added = coll.add(copyable.map(cop => cop.clone()), { at });
+          added = coll.add(
+            copyable.map(cop => cop.clone()),
+            { at }
+          );
         }
 
         added = isArray(added) ? added : [added];

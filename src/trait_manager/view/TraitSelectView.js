@@ -1,14 +1,18 @@
+import Backbone from 'backbone';
 import { isString, isUndefined } from 'underscore';
-const TraitView = require('./TraitView');
-const $ = require('backbone').$;
+import TraitView from './TraitView';
 
-module.exports = TraitView.extend({
-  initialize(o) {
-    TraitView.prototype.initialize.apply(this, arguments);
-    const { ppfx, inputhClass, fieldClass, model } = this;
-    this.listenTo(model, 'change:options', this.render);
-    this.tmpl = `<div class="${fieldClass}">
-      <div class="${inputhClass}"></div>
+const $ = Backbone.$;
+
+export default TraitView.extend({
+  init() {
+    this.listenTo(this.model, 'change:options', this.rerender);
+  },
+
+  templateInput() {
+    const { ppfx, clsField } = this;
+    return `<div class="${clsField}">
+      <div data-input></div>
       <div class="${ppfx}sel-arrow">
         <div class="${ppfx}d-s-arrow"></div>
       </div>
@@ -22,7 +26,8 @@ module.exports = TraitView.extend({
    */
   getInputEl() {
     if (!this.$input) {
-      const { model } = this;
+      const { model, em } = this;
+      const propName = model.get('name');
       const opts = model.get('options') || [];
       let input = '<select>';
 
@@ -34,7 +39,7 @@ module.exports = TraitView.extend({
           name = el;
           value = el;
         } else {
-          name = el.name ? el.name : el.value;
+          name = el.name || el.label || el.value;
           value = `${isUndefined(el.value) ? el.id : el.value}`.replace(
             /"/g,
             '&quot;'
@@ -42,14 +47,14 @@ module.exports = TraitView.extend({
           style = el.style ? el.style.replace(/"/g, '&quot;') : '';
           attrs += style ? ` style="${style}"` : '';
         }
-
-        input += `<option value="${value}"${attrs}>${name}</option>`;
+        const resultName =
+          em.t(`traitManager.traits.options.${propName}.${value}`) || name;
+        input += `<option value="${value}"${attrs}>${resultName}</option>`;
       });
 
       input += '</select>';
-      this.input = input;
       this.$input = $(input);
-      let val = model.getTargetValue() || model.get('value');
+      const val = model.getTargetValue();
       !isUndefined(val) && this.$input.val(val);
     }
 

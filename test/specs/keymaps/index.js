@@ -1,5 +1,5 @@
 import Editor from 'editor/index';
-const Keymaps = require('keymaps');
+import Keymaps from 'keymaps';
 
 describe('Keymaps', () => {
   describe('Main', () => {
@@ -41,7 +41,7 @@ describe('Keymaps', () => {
       const id = 'test';
       const keys = 'ctrl+a';
       const handler = () => {};
-      const model = obj.add(id, 'ctrl+a', handler);
+      const model = obj.add(id, keys, handler);
       const removed = obj.remove(id);
       expect(obj.get(id)).toEqual(undefined);
       expect(obj.getAll()).toEqual({});
@@ -63,7 +63,8 @@ describe('Keymaps', () => {
 
       it('Should run the handler', () => {
         const handler = {
-          run: jest.fn()
+          run: jest.fn(),
+          callRun: jest.fn()
         };
         obj.add('test', 'ctrl+a', handler);
         const keyboardEvent = new KeyboardEvent('keydown', {
@@ -73,7 +74,7 @@ describe('Keymaps', () => {
         });
         document.dispatchEvent(keyboardEvent);
 
-        expect(handler.run).toBeCalled();
+        expect(handler.callRun).toBeCalled();
       });
     });
 
@@ -84,7 +85,8 @@ describe('Keymaps', () => {
 
       it('Should not run the handler', () => {
         const handler = {
-          run: jest.fn()
+          run: jest.fn(),
+          callRun: jest.fn()
         };
         obj.add('test', 'ctrl+a', handler);
         const keyboardEvent = new KeyboardEvent('keydown', {
@@ -94,12 +96,13 @@ describe('Keymaps', () => {
         });
         document.dispatchEvent(keyboardEvent);
 
-        expect(handler.run).toBeCalledTimes(0);
+        expect(handler.callRun).toBeCalledTimes(0);
       });
 
       it('Should run the handler if checked as force', () => {
         const handler = {
-          run: jest.fn()
+          run: jest.fn(),
+          callRun: jest.fn()
         };
         obj.add('test', 'ctrl+a', handler, { force: true });
         const keyboardEvent = new KeyboardEvent('keydown', {
@@ -109,7 +112,7 @@ describe('Keymaps', () => {
         });
         document.dispatchEvent(keyboardEvent);
 
-        expect(handler.run).toBeCalled();
+        expect(handler.callRun).toBeCalled();
       });
     });
   });

@@ -1,7 +1,8 @@
+import { isUndefined } from 'underscore';
 import Backbone from 'backbone';
-const Layer = require('./Layer');
+import Layer from './Layer';
 
-module.exports = Backbone.Collection.extend({
+export default Backbone.Collection.extend({
   model: Layer,
 
   initialize() {
@@ -12,6 +13,7 @@ module.exports = Backbone.Collection.extend({
 
   onAdd(model, c, opts) {
     if (!opts.noIncrement) model.set('index', this.idx++);
+    opts.active && this.active(this.indexOf(model));
   },
 
   onReset() {
@@ -62,7 +64,6 @@ module.exports = Backbone.Collection.extend({
   getLayersFromStyle(styleObj) {
     const layers = [];
     const properties = this.properties;
-    const propNames = properties.pluck('property');
 
     properties.each(propModel => {
       const style = styleObj[propModel.get('property')];
@@ -109,11 +110,13 @@ module.exports = Backbone.Collection.extend({
     return result.join(this.getSeparator());
   },
 
-  getPropertyValues(property) {
+  getPropertyValues(property, defValue) {
     const result = [];
     this.each(layer => {
       const value = layer.getPropertyValue(property);
-      value && result.push(value);
+      value
+        ? result.push(value)
+        : !isUndefined(defValue) && result.push(defValue);
     });
     return result.join(', ');
   }

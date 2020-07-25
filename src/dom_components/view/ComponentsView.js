@@ -1,10 +1,11 @@
 import Backbone from 'backbone';
 import { isUndefined } from 'underscore';
 
-module.exports = Backbone.View.extend({
+export default Backbone.View.extend({
   initialize(o) {
     this.opts = o || {};
     this.config = o.config || {};
+    this.em = this.config.em;
     const coll = this.collection;
     this.listenTo(coll, 'add', this.addTo);
     this.listenTo(coll, 'reset', this.resetChildren);
@@ -12,40 +13,16 @@ module.exports = Backbone.View.extend({
   },
 
   removeChildren(removed, coll, opts = {}) {
-    const em = this.config.em;
-    const view = removed.view;
-    const tempComp = removed.opt.temporary;
-    const tempRemove = opts.temporary;
-    if (!view) return;
-    view.remove.apply(view);
-    const { childrenView, scriptContainer } = view;
-    childrenView && childrenView.stopListening();
-    scriptContainer && scriptContainer.remove();
-    removed.components().forEach(it => this.removeChildren(it, coll, opts));
+    removed.views.forEach(view => {
+      if (!view) return;
+      const { childrenView, scriptContainer } = view;
+      childrenView && childrenView.stopListening();
+      scriptContainer && scriptContainer.remove();
+      view.remove.apply(view);
+    });
 
-    if (em && !tempRemove) {
-      // Remove the component from the global list
-      const id = removed.getId();
-      const domc = em.get('DomComponents');
-      delete domc.componentsById[id];
-
-      // Remove all related CSS rules
-      const allRules = em.get('CssComposer').getAll();
-      allRules.remove(
-        allRules.filter(
-          rule => rule.getSelectors().getFullString() === `#${id}`
-        )
-      );
-
-      if (!tempComp) {
-        const cm = em.get('Commands');
-        const hasSign = removed.get('style-signature');
-        const optStyle = { target: removed };
-        hasSign && cm.run('core:component-style-clear', optStyle);
-        removed.removed();
-        em.trigger('component:remove', removed);
-      }
-    }
+    const inner = removed.components();
+    inner.forEach(it => this.removeChildren(it, coll, opts));
   },
 
   /**
@@ -79,10 +56,13 @@ module.exports = Backbone.View.extend({
    * @private
    * */
   addToCollection(model, fragmentEl, index) {
-    if (!this.compView) this.compView = require('./ComponentView');
-    const { config, opts } = this;
+    if (!this.compView) this.compView = require('./ComponentView').default;
+    const { config, opts, em } = this;
     const fragment = fragmentEl || null;
-    const dt = opts.componentTypes;
+    const { frameView = {} } = config;
+    const sameFrameView = frameView.model && model.getView(frameView.model);
+    const dt =
+      opts.componentTypes || (em && em.get('DomComponents').getTypes());
     const type = model.get('type');
     let viewObject = this.compView;
 
@@ -92,13 +72,22 @@ module.exports = Backbone.View.extend({
         break;
       }
     }
+    const view =
+      sameFrameView ||
+      new viewObject({
+        model,
+        config,
+        componentTypes: dt
+      });
+    let rendered;
 
-    const view = new viewObject({
-      model,
-      config,
-      componentTypes: dt
-    });
-    let rendered = view.render().el;
+    try {
+      // Avoid breaking on DOM rendering (eg. invalid attribute name)
+      rendered = view.render().el;
+    } catch (error) {
+      rendered = document.createTextNode('');
+      em.logError(error);
+    }
 
     if (fragment) {
       fragment.appendChild(rendered);
@@ -129,9 +118,10 @@ module.exports = Backbone.View.extend({
     return rendered;
   },
 
-  resetChildren() {
+  resetChildren(models, { previousModels = [] } = {}) {
     this.parentEl.innerHTML = '';
-    this.collection.each(model => this.addToCollection(model));
+    previousModels.forEach(md => this.removeChildren(md, this.collection));
+    models.each(model => this.addToCollection(model));
   },
 
   render(parent) {

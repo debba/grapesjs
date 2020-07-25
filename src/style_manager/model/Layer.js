@@ -1,6 +1,7 @@
 import Backbone from 'backbone';
+import Properties from './Properties';
 
-module.exports = Backbone.Model.extend({
+export default Backbone.Model.extend({
   defaults: {
     index: '',
     value: '',
@@ -11,17 +12,15 @@ module.exports = Backbone.Model.extend({
   },
 
   initialize() {
-    const Properties = require('./Properties');
-    const properties = this.get('properties');
+    const prp = this.get('properties');
     var value = this.get('value');
     this.set(
       'properties',
-      properties instanceof Properties ? properties : new Properties(properties)
+      prp instanceof Properties ? prp : new Properties(prp)
     );
-    this.get('properties').forEach(item => {
-      const { collection } = this;
-      item.parent = collection && collection.property;
-    });
+    const props = this.get('properties');
+    props.forEach(this.onPropAdd, this);
+    this.listenTo(props, 'add', this.onPropAdd);
 
     // If there is no value I'll try to get it from values
     // I need value setted to make preview working
@@ -35,6 +34,11 @@ module.exports = Backbone.Model.extend({
 
       this.set('value', val.trim());
     }
+  },
+
+  onPropAdd(prop) {
+    const coll = this.collection;
+    prop.parent = coll && coll.property;
   },
 
   /**
@@ -59,6 +63,6 @@ module.exports = Backbone.Model.extend({
   getFullValue() {
     let result = [];
     this.get('properties').each(prop => result.push(prop.getFullValue()));
-    return result.join(' ');
+    return result.join(' ').trim();
   }
 });

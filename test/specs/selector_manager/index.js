@@ -1,10 +1,6 @@
-var SelectorManager = require('selector_manager');
-var Selector = require('selector_manager/model/Selector');
-var Models = require('./model/SelectorModels');
-var ClassTagView = require('./view/ClassTagView');
-var ClassTagsView = require('./view/ClassTagsView');
-var e2e = require('./e2e/ClassManager');
-var Editor = require('editor/model/Editor');
+import SelectorManager from 'selector_manager';
+import Selector from 'selector_manager/model/Selector';
+import Editor from 'editor/model/Editor';
 
 describe('SelectorManager', () => {
   describe('Main', () => {
@@ -30,6 +26,7 @@ describe('SelectorManager', () => {
 
     test('Able to add default selectors', () => {
       var cm = new SelectorManager().init({
+        em,
         selectors: ['test1', 'test2', 'test3']
       });
       expect(cm.getAll().length).toEqual(3);
@@ -171,13 +168,5 @@ describe('SelectorManager', () => {
       expect(obj.getAll().length).toEqual(1);
       expect(result.length).toEqual(1);
     });
-  });
-
-  Models.run();
-
-  describe('Views', () => {
-    ClassTagView.run();
-    ClassTagsView.run();
-    e2e.run();
   });
 });
