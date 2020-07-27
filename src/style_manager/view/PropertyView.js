@@ -514,8 +514,12 @@ export default Backbone.View.extend({
       delete style.__;
     }
 
+    console.log('updateeeTargeetStyleee');
+
     target.unset('isOwnEdited');
     if (!isUndefined(properStrategy) && properStrategy) {
+      console.log('isOwnEditedisOwnEditedisOwnEdited');
+
       if (component) {
         component.trigger('ownStyleUpdate:property', property, value, target);
         component.trigger(`ownStyleUpdate:property:${property}`, value, target);
