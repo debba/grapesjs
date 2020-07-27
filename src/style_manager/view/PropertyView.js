@@ -338,6 +338,8 @@ export default Backbone.View.extend({
    * @private
    */
   getTargetValue(opts = {}) {
+    console.log('getttTargetttValueee');
+
     var result;
     var model = this.model;
     var target = this.getTargetModel();
