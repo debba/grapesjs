@@ -20,7 +20,9 @@ export default Backbone.View.extend({
       `;
     }
 
-    return `
+    return (
+      view.config.useCustomAssetsTemplate ||
+      `
     <div class="${pfx}assets-cont">
       <div class="${pfx}assets-header">
         ${form}
@@ -28,7 +30,8 @@ export default Backbone.View.extend({
       <div class="${pfx}assets" data-el="assets"></div>
       <div style="clear:both"></div>
     </div>
-    `;
+    `
+    );
   },
 
   initialize(o) {
