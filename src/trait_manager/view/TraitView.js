@@ -221,29 +221,25 @@ export default Backbone.View.extend({
    * */
   renderField() {
     const { $el, appendInput, model } = this;
-    const { type } = model.attributes;
+    const inputs = $el.find('[data-input]');
+    const el = inputs[inputs.length - 1];
+    let tpl = model.el;
 
-    if (type !== 'social') {
-      const inputs = $el.find('[data-input]');
-      const el = inputs[inputs.length - 1];
-      let tpl = model.el;
-
-      if (!tpl) {
-        tpl = this.createInput
-          ? this.createInput(this.getClbOpts())
-          : this.getInputEl();
-      }
-
-      if (isString(tpl)) {
-        el.innerHTML = tpl;
-        this.elInput = el.firstChild;
-      } else {
-        appendInput ? el.appendChild(tpl) : el.insertBefore(tpl, el.firstChild);
-        this.elInput = tpl;
-      }
-
-      model.el = this.elInput;
+    if (!tpl) {
+      tpl = this.createInput
+        ? this.createInput(this.getClbOpts())
+        : this.getInputEl();
     }
+
+    if (isString(tpl)) {
+      el.innerHTML = tpl;
+      this.elInput = el.firstChild;
+    } else {
+      appendInput ? el.appendChild(tpl) : el.insertBefore(tpl, el.firstChild);
+      this.elInput = tpl;
+    }
+
+    model.el = this.elInput;
   },
 
   hasLabel() {
