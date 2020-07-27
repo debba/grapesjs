@@ -223,7 +223,7 @@ export default Backbone.View.extend({
     const { $el, appendInput, model } = this;
     const { type } = model.attributes;
 
-    if (type === 'social') {
+    if (type === 'social' || type === 'youtube_url') {
       if (!this.$input) {
         this.$el.append(this.tmpl);
         const el = this.getInputEl();
