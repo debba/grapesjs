@@ -338,8 +338,6 @@ export default Backbone.View.extend({
    * @private
    */
   getTargetValue(opts = {}) {
-    console.log('getttTargetttValueee');
-
     var result;
     var model = this.model;
     var target = this.getTargetModel();
@@ -481,14 +479,6 @@ export default Backbone.View.extend({
     const value = model.getFullValue();
     const onChange = this.onChange;
 
-    console.log('checccck', {
-      target,
-      targetStylable: this.isTargetStylable(target),
-      componentStylable: this.isComponentStylable(),
-      fromTarget: opt.fromTarget,
-      onChange: onChange
-    });
-
     // Check if component is allowed to be styled
     if (
       !target ||
@@ -549,12 +539,8 @@ export default Backbone.View.extend({
       delete style.__;
     }
 
-    console.log('updateeeTargeetStyleee');
-
     target.unset('isOwnEdited');
     if (!isUndefined(properStrategy) && properStrategy) {
-      console.log('isOwnEditedisOwnEditedisOwnEdited');
-
       if (component) {
         component.trigger('ownStyleUpdate:property', property, value, target);
         component.trigger(`ownStyleUpdate:property:${property}`, value, target);

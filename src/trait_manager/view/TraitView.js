@@ -223,6 +223,8 @@ export default Backbone.View.extend({
     const { $el, appendInput, model } = this;
     const { type } = model.attributes;
 
+    console.log('typeee', type);
+
     if (type === 'social' && !this.$input) {
       this.$el.append(this.tmpl);
       const el = this.getInputEl();
