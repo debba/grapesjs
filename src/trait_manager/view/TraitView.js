@@ -221,25 +221,35 @@ export default Backbone.View.extend({
    * */
   renderField() {
     const { $el, appendInput, model } = this;
-    const inputs = $el.find('[data-input]');
-    const el = inputs[inputs.length - 1];
-    let tpl = model.el;
+    const { type } = model.attributes;
 
-    if (!tpl) {
-      tpl = this.createInput
-        ? this.createInput(this.getClbOpts())
-        : this.getInputEl();
-    }
-
-    if (isString(tpl)) {
-      el.innerHTML = tpl;
-      this.elInput = el.firstChild;
+    if (type === 'social' && !this.$input) {
+      this.$el.append(this.tmpl);
+      const el = this.getInputEl();
+      // I use prepand expecially for checkbox traits
+      const inputWrap = this.el.querySelector(`.${this.inputhClass}`);
+      inputWrap.insertBefore(el, inputWrap.childNodes[0]);
     } else {
-      appendInput ? el.appendChild(tpl) : el.insertBefore(tpl, el.firstChild);
-      this.elInput = tpl;
-    }
+      const inputs = $el.find('[data-input]');
+      const el = inputs[inputs.length - 1];
+      let tpl = model.el;
 
-    model.el = this.elInput;
+      if (!tpl) {
+        tpl = this.createInput
+          ? this.createInput(this.getClbOpts())
+          : this.getInputEl();
+      }
+
+      if (isString(tpl)) {
+        el.innerHTML = tpl;
+        this.elInput = el.firstChild;
+      } else {
+        appendInput ? el.appendChild(tpl) : el.insertBefore(tpl, el.firstChild);
+        this.elInput = tpl;
+      }
+
+      model.el = this.elInput;
+    }
   },
 
   hasLabel() {
