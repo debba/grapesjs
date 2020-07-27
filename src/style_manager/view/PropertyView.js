@@ -431,6 +431,7 @@ export default Backbone.View.extend({
   modelValueChanged(e, val, opt = {}) {
     const em = this.config.em;
     const model = this.model;
+    const properStrategy = this.model.get('useOwnStrategy');
     const value = model.getFullValue();
     const target = this.getTarget();
     const prop = model.get('property');
@@ -441,9 +442,35 @@ export default Backbone.View.extend({
       this.setValue(value);
     }
 
-    // Avoid target update if the changes comes from it
-    if (!opt.fromTarget) {
-      this.getTargets().forEach(target => this.__updateTarget(target, opt));
+    if (!isUndefined(properStrategy) && properStrategy) {
+      // Check if component is allowed to be styled
+      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
+        return;
+      }
+
+      // Avoid target update if the changes comes from it
+      if (!opt.fromTarget) {
+        // The onChange is used by Composite/Stack properties, so I'd avoid sending
+        // it back if the change comes from one of those
+        if (onChange && !opt.fromParent) {
+          onChange(target, this, opt);
+        } else {
+          this.updateTargetStyle(value, null, opt);
+        }
+      }
+
+      const component = em && em.getSelected();
+
+      if (em && component) {
+        em.trigger('component:update', component);
+        em.trigger('component:styleUpdate', component, prop);
+        em.trigger(`component:styleUpdate:${prop}`, component);
+      }
+    } else {
+      // Avoid target update if the changes comes from it
+      if (!opt.fromTarget) {
+        this.getTargets().forEach(target => this.__updateTarget(target, opt));
+      }
     }
   },
 
