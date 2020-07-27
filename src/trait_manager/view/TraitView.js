@@ -225,12 +225,14 @@ export default Backbone.View.extend({
 
     console.log('typeee', type);
 
-    if (type === 'social' && !this.$input) {
-      this.$el.append(this.tmpl);
-      const el = this.getInputEl();
-      // I use prepand expecially for checkbox traits
-      const inputWrap = this.el.querySelector(`.${this.inputhClass}`);
-      inputWrap.insertBefore(el, inputWrap.childNodes[0]);
+    if (type === 'social') {
+      if (!this.$input) {
+        this.$el.append(this.tmpl);
+        const el = this.getInputEl();
+        // I use prepand expecially for checkbox traits
+        const inputWrap = this.el.querySelector(`.${this.inputhClass}`);
+        inputWrap.insertBefore(el, inputWrap.childNodes[0]);
+      }
     } else {
       const inputs = $el.find('[data-input]');
       const el = inputs[inputs.length - 1];
