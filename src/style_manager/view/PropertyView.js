@@ -488,6 +488,12 @@ export default Backbone.View.extend({
     const value = model.getFullValue();
     const onChange = this.onChange;
 
+    console.log('allowed', {
+      target,
+      isTgSt: this.isTargetStylable(target),
+      isCpSt: this.isComponentStylable()
+    });
+
     // Check if component is allowed to be styled
     if (
       !target ||
