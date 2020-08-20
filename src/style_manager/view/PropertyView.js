@@ -481,8 +481,9 @@ export default Backbone.View.extend({
 
     // Check if component is allowed to be styled
     if (
-      !target.is('ECButton') &&
-      (!target || !this.isTargetStylable(target) || !this.isComponentStylable())
+      !target ||
+      //!this.isTargetStylable(target) ||
+      !this.isComponentStylable()
     ) {
       return;
     }
