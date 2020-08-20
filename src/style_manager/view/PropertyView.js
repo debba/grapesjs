@@ -494,6 +494,7 @@ export default Backbone.View.extend({
       !this.isTargetStylable(target) ||
       !this.isComponentStylable()
     ) {
+      console.log('not stylable');
       return;
     }
 
@@ -504,6 +505,7 @@ export default Backbone.View.extend({
       if (onChange && !opt.fromParent) {
         onChange(target, this, opt);
       } else {
+        console.log('update target');
         this.updateTargetStyle(value, null, { ...opt, target });
       }
     }
