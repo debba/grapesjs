@@ -440,14 +440,6 @@ export default Backbone.View.extend({
       this.setValue(value);
     }
 
-    console.log('properStrategy', properStrategy);
-    console.log({
-      target,
-      isTargetStylable: this.isTargetStylable(),
-      isComponentStylable: this.isComponentStylable(),
-      fromTarget: opt.fromTarget
-    });
-
     if (!isUndefined(properStrategy) && properStrategy) {
       // Check if component is allowed to be styled
       if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
@@ -475,7 +467,6 @@ export default Backbone.View.extend({
     } else {
       // Avoid target update if the changes comes from it
       if (!opt.fromTarget) {
-        console.log('here');
         this.getTargets().forEach(target => this.__updateTarget(target, opt));
       }
     }
@@ -488,19 +479,11 @@ export default Backbone.View.extend({
     const value = model.getFullValue();
     const onChange = this.onChange;
 
-    console.log('allowed', {
-      target,
-      isTgSt: this.isTargetStylable(target),
-      isCpSt: this.isComponentStylable()
-    });
-
     // Check if component is allowed to be styled
     if (
-      !target ||
-      //!this.isTargetStylable(target) ||
-      !this.isComponentStylable()
+      !target.is('ECButton') &&
+      (!target || !this.isTargetStylable(target) || !this.isComponentStylable())
     ) {
-      console.log('not stylable');
       return;
     }
 
@@ -511,7 +494,6 @@ export default Backbone.View.extend({
       if (onChange && !opt.fromParent) {
         onChange(target, this, opt);
       } else {
-        console.log('update target');
         this.updateTargetStyle(value, null, { ...opt, target });
       }
     }
