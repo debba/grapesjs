@@ -427,56 +427,17 @@ export default Backbone.View.extend({
    * @param {Object} opt  Options
    * */
   modelValueChanged(e, val, opt = {}) {
-    const em = this.config.em;
     const model = this.model;
-    const properStrategy = this.model.get('useOwnStrategy');
     const value = model.getFullValue();
-    const target = this.getTarget();
-    const prop = model.get('property');
-    const onChange = this.onChange;
 
     // Avoid element update if the change comes from it
     if (!opt.fromInput) {
       this.setValue(value);
     }
 
-    console.log('properStrategy', properStrategy);
-    console.log({
-      target,
-      isTargetStylable: this.isTargetStylable(),
-      isComponentStylable: this.isComponentStylable(),
-      fromTarget: opt.fromTarget
-    });
-
-    if (!isUndefined(properStrategy) && properStrategy) {
-      // Check if component is allowed to be styled
-      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
-        return;
-      }
-
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        // The onChange is used by Composite/Stack properties, so I'd avoid sending
-        // it back if the change comes from one of those
-        if (onChange && !opt.fromParent) {
-          onChange(target, this, opt);
-        } else {
-          this.updateTargetStyle(value, null, opt);
-        }
-      }
-
-      const component = em && em.getSelected();
-
-      if (em && component) {
-        em.trigger('component:update', component);
-        em.trigger('component:styleUpdate', component, prop);
-        em.trigger(`component:styleUpdate:${prop}`, component);
-      }
-    } else {
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        this.getTargets().forEach(target => this.__updateTarget(target, opt));
-      }
+    // Avoid target update if the changes comes from it
+    if (!opt.fromTarget) {
+      this.getTargets().forEach(target => this.__updateTarget(target, opt));
     }
   },
 
