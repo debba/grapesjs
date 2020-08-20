@@ -440,6 +440,14 @@ export default Backbone.View.extend({
       this.setValue(value);
     }
 
+    console.log('properStrategy', properStrategy);
+    console.log({
+      target,
+      isTargetStylable: this.isTargetStylable(),
+      isComponentStylable: this.isComponentStylable(),
+      fromTarget: opt.fromTarget
+    });
+
     if (!isUndefined(properStrategy) && properStrategy) {
       // Check if component is allowed to be styled
       if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {

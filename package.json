@@ -87,7 +87,10 @@
     }
   },
   "lint-staged": {
-    "{src,test}/**/*.js": ["prettier --single-quote --write", "git add"]
+    "{src,test}/**/*.js": [
+      "prettier --single-quote --write",
+      "git add"
+    ]
   },
   "jest": {
     "testURL": "http://localhost/",

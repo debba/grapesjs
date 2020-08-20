@@ -20982,7 +20982,7 @@ __webpack_require__.r(__webpack_exports__);
       form = "\n          <form class=\"".concat(pfx, "add-asset\">\n            <div class=\"").concat(ppfx, "field ").concat(pfx, "add-field\">\n              <input placeholder=\"").concat(em && em.t('assetManager.inputPlh'), "\"/>\n            </div>\n            <button class=\"").concat(ppfx, "btn-prim\">").concat(em && em.t('assetManager.addButton'), "</button>\n            <div style=\"clear:both\"></div>\n          </form>\n      ");
     }
 
-    return "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        ").concat(form, "\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
+    return view.config.useCustomAssetsTemplate || "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        ").concat(form, "\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -49433,6 +49433,7 @@ var clearProp = 'data-clear-style';
     var opt = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var em = this.config.em;
     var model = this.model;
+    var properStrategy = this.model.get('useOwnStrategy');
     var value = model.getFullValue();
     var target = this.getTarget();
     var prop = model.get('property');
@@ -49440,13 +49441,47 @@ var clearProp = 'data-clear-style';
 
     if (!opt.fromInput) {
       this.setValue(value);
-    } // Avoid target update if the changes comes from it
+    }
+
+    console.log("properStrategy", properStrategy);
+    console.log({
+      target: target,
+      isTargetStylable: this.isTargetStylable(),
+      isComponentStylable: this.isComponentStylable(),
+      fromTarget: opt.fromTarget
+    });
+
+    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
+      // Check if component is allowed to be styled
+      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
+        return;
+      } // Avoid target update if the changes comes from it
 
 
-    if (!opt.fromTarget) {
-      this.getTargets().forEach(function (target) {
-        return _this3.__updateTarget(target, opt);
-      });
+      if (!opt.fromTarget) {
+        // The onChange is used by Composite/Stack properties, so I'd avoid sending
+        // it back if the change comes from one of those
+        if (onChange && !opt.fromParent) {
+          onChange(target, this, opt);
+        } else {
+          this.updateTargetStyle(value, null, opt);
+        }
+      }
+
+      var component = em && em.getSelected();
+
+      if (em && component) {
+        em.trigger('component:update', component);
+        em.trigger('component:styleUpdate', component, prop);
+        em.trigger("component:styleUpdate:".concat(prop), component);
+      }
+    } else {
+      // Avoid target update if the changes comes from it
+      if (!opt.fromTarget) {
+        this.getTargets().forEach(function (target) {
+          return _this3.__updateTarget(target, opt);
+        });
+      }
     }
   },
   __updateTarget: function __updateTarget(target) {
