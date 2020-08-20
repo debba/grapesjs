@@ -5,7 +5,7 @@ import { includes, each } from 'underscore';
 
 const clearProp = 'data-clear-style';
 
-export default Backbone.View.extend({
+module.exports = Backbone.View.extend({
   template(model) {
     const pfx = this.pfx;
     return `
@@ -19,14 +19,14 @@ export default Backbone.View.extend({
   },
 
   templateLabel(model) {
-    const { pfx, em } = this;
-    const { parent } = model;
-    const { icon = '', info = '', id, name } = model.attributes;
-    const label = (em && em.t(`styleManager.properties.${id}`)) || name;
+    const pfx = this.pfx;
+    const icon = model.get('icon');
+    const info = model.get('info');
+    const parent = model.parent;
 
     return `
       <span class="${pfx}icon ${icon}" title="${info}">
-        ${label}
+        ${model.get('name')}
       </span>
       ${!parent ? `<b class="${pfx}clear" ${clearProp}>&Cross;</b>` : ''}
     `;
@@ -90,11 +90,6 @@ export default Backbone.View.extend({
     this.listenTo(model, 'targetUpdated', this.targetUpdated);
     this.listenTo(model, 'change:visible', this.updateVisibility);
     this.listenTo(model, 'change:status', this.updateStatus);
-    this.listenTo(
-      model,
-      'change:name change:className change:full',
-      this.render
-    );
 
     const init = this.init && this.init.bind(this);
     init && init();
@@ -137,10 +132,10 @@ export default Backbone.View.extend({
   /**
    * Clear the property from the target
    */
-  clear(ev) {
-    ev && ev.stopPropagation();
+  clear(e) {
+    e && e.stopPropagation();
     this.model.clearValue();
-    // Skip one stack with setTimeout to avoid inconsistencies (eg. visible on padding composite clear)
+    // Skip one stack with setTimeout to avoid inconsistencies
     setTimeout(() => this.targetUpdated());
   },
 
@@ -164,11 +159,6 @@ export default Backbone.View.extend({
     return this.getTargetModel();
   },
 
-  getTargets() {
-    const { targets } = this.propTarget;
-    return targets || [this.getTarget()];
-  },
-
   /**
    * Returns Styleable model
    * @return {Model|null}
@@ -189,9 +179,9 @@ export default Backbone.View.extend({
    * Triggers when the value of element input/s is changed, so have to update
    * the value of the model which will propogate those changes to the target
    */
-  inputValueChanged(ev) {
-    ev && ev.stopPropagation();
-    this.model.setValueFromInput(this.getInputValue());
+  inputValueChanged(e) {
+    e && e.stopPropagation();
+    this.model.setValue(this.getInputValue(), 1, { fromInput: 1 });
     this.elementUpdated();
   },
 
@@ -205,7 +195,7 @@ export default Backbone.View.extend({
   setStatus(value) {
     this.model.set('status', value);
     const parent = this.model.parent;
-    parent && value == 'updated' && parent.set('status', value);
+    parent && value && parent.set('status', value);
   },
 
   emitUpdateTarget: debounce(function() {
@@ -213,8 +203,20 @@ export default Backbone.View.extend({
     em && em.trigger('styleManager:update:target', this.getTarget());
   }),
 
-  _getTargetData() {
-    const { model, config } = this;
+  /**
+   * Fired when the target is changed
+   * */
+  targetUpdated() {
+    this.emitUpdateTarget();
+
+    if (!this.checkVisibility()) {
+      return;
+    }
+
+    const config = this.config;
+    const em = config.em;
+    const { model } = this;
+    const property = model.get('property');
     let value = '';
     let status = '';
     let targetValue = this.getTargetValue({ ignoreDefault: 1 });
@@ -230,7 +232,7 @@ export default Backbone.View.extend({
     } else if (
       computedValue &&
       config.showComputed &&
-      computedValue !== defaultValue
+      computedValue != defaultValue
     ) {
       value = computedValue;
 
@@ -242,71 +244,13 @@ export default Backbone.View.extend({
       status = '';
     }
 
-    return {
-      value,
-      status,
-      targetValue,
-      defaultValue,
-      computedValue
-    };
-  },
-
-  /**
-   * Fired when the target is changed
-   * */
-  targetUpdated(mod, val, opts = {}) {
-    this.emitUpdateTarget();
-
-    if (!this.checkVisibility()) {
-      return;
-    }
-
-    const config = this.config;
-    const em = config.em;
-    const { model } = this;
-    const property = model.get('property');
-    const { status, value, ...targetData } = this._getTargetData();
-    const data = {
-      status,
-      value,
-      ...targetData
-    };
-
+    model.setValue(value, 0, { fromTarget: 1 });
     this.setStatus(status);
-    model.setValue(value, 0, { fromTarget: 1, ...opts });
 
     if (em) {
-      em.trigger('styleManager:change', this, property, value, data);
-      em.trigger(`styleManager:change:${property}`, this, value, data);
-      this._emitUpdate(data);
+      em.trigger('styleManager:change', this, property, value);
+      em.trigger(`styleManager:change:${property}`, this, value);
     }
-
-    return data;
-  },
-
-  _emitUpdate(addData = {}) {
-    const { em, model } = this;
-    if (!em) return;
-    const property = model.get('property');
-    const data = { ...this._getEventData(), ...addData };
-    const { id } = data;
-
-    em.trigger('style:update', data);
-    em.trigger(`style:update:${property}`, data);
-    property !== id && em.trigger(`style:update:${id}`, data);
-  },
-
-  _getEventData() {
-    const { model } = this;
-
-    return {
-      propertyView: this,
-      targets: this.getTargets(),
-      value: model.getFullValue(),
-      property: model,
-      id: model.get('id'),
-      name: model.get('property')
-    };
   },
 
   checkVisibility() {
@@ -429,7 +373,6 @@ export default Backbone.View.extend({
   modelValueChanged(e, val, opt = {}) {
     const em = this.config.em;
     const model = this.model;
-    const properStrategy = this.model.get('useOwnStrategy');
     const value = model.getFullValue();
     const target = this.getTarget();
     const prop = model.get('property');
@@ -440,67 +383,8 @@ export default Backbone.View.extend({
       this.setValue(value);
     }
 
-    console.log('properStrategy', properStrategy);
-    console.log({
-      target,
-      isTargetStylable: this.isTargetStylable(),
-      isComponentStylable: this.isComponentStylable(),
-      fromTarget: opt.fromTarget
-    });
-
-    if (!isUndefined(properStrategy) && properStrategy) {
-      // Check if component is allowed to be styled
-      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
-        return;
-      }
-
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        // The onChange is used by Composite/Stack properties, so I'd avoid sending
-        // it back if the change comes from one of those
-        if (onChange && !opt.fromParent) {
-          onChange(target, this, opt);
-        } else {
-          this.updateTargetStyle(value, null, opt);
-        }
-      }
-
-      const component = em && em.getSelected();
-
-      if (em && component) {
-        em.trigger('component:update', component);
-        em.trigger('component:styleUpdate', component, prop);
-        em.trigger(`component:styleUpdate:${prop}`, component);
-      }
-    } else {
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        console.log('here');
-        this.getTargets().forEach(target => this.__updateTarget(target, opt));
-      }
-    }
-  },
-
-  __updateTarget(target, opt = {}) {
-    const { model } = this;
-    const { em } = this.config;
-    const prop = model.get('property');
-    const value = model.getFullValue();
-    const onChange = this.onChange;
-
-    console.log('allowed', {
-      target,
-      isTgSt: this.isTargetStylable(target),
-      isCpSt: this.isComponentStylable()
-    });
-
     // Check if component is allowed to be styled
-    if (
-      !target ||
-      !this.isTargetStylable(target) ||
-      !this.isComponentStylable()
-    ) {
-      console.log('not stylable');
+    if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
       return;
     }
 
@@ -511,20 +395,17 @@ export default Backbone.View.extend({
       if (onChange && !opt.fromParent) {
         onChange(target, this, opt);
       } else {
-        console.log('update target');
-        this.updateTargetStyle(value, null, { ...opt, target });
+        this.updateTargetStyle(value, null, opt);
       }
     }
 
     const component = em && em.getSelected();
 
     if (em && component) {
-      !opt.noEmit && em.trigger('component:update', component);
+      em.trigger('component:update', component);
       em.trigger('component:styleUpdate', component, prop);
       em.trigger(`component:styleUpdate:${prop}`, component);
     }
-
-    this._emitUpdate();
   },
 
   /**
@@ -547,13 +428,6 @@ export default Backbone.View.extend({
       style[property] = value;
     } else {
       delete style[property];
-    }
-
-    // Forces to trigger the change (for UndoManager)
-    if (opts.avoidStore) {
-      style.__ = 1;
-    } else {
-      delete style.__;
     }
 
     target.unset('isOwnEdited');
@@ -735,17 +609,16 @@ export default Backbone.View.extend({
     const el = this.el;
     const property = model.get('property');
     const full = model.get('full');
-    const cls = model.get('className') || '';
     const className = `${pfx}property`;
     el.innerHTML = this.template(model);
     el.className = `${className} ${pfx}${model.get(
       'type'
-    )} ${className}__${property} ${cls}`.trim();
+    )} ${className}__${property}`;
     el.className += full ? ` ${className}--full` : '';
     this.updateStatus();
 
     const onRender = this.onRender && this.onRender.bind(this);
     onRender && onRender();
-    this.setValue(model.get('value'), { fromTarget: 1 });
+    this.setValue(model.get('value'), { targetUpdate: 1 });
   }
 });
