@@ -564,6 +564,9 @@ export default Backbone.View.extend({
       }
     }
 
+    em.trigger('component:styleUpdate', component, property);
+    em.trigger(`component:styleUpdate:${property}`, component);
+
     // Helper is used by `states` like ':hover' to show its preview
     const helper = this.getHelperModel();
     helper && helper.setStyle(style, opts);
