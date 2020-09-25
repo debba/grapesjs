@@ -287,7 +287,8 @@ export default Backbone.Model.extend({
    * @private
    */
   getSelectedAll() {
-    return this.get('selected').models;
+    const sel = this.get('selected');
+    return (sel && sel.models) || [];
   },
 
   /**
@@ -537,7 +538,10 @@ export default Backbone.Model.extend({
    */
   load(clb = null) {
     this.getCacheLoad(1, res => {
-      this.get('storables').forEach(module => module.load(res));
+      this.get('storables').forEach(module => {
+        module.load(res);
+        module.postLoad && module.postLoad(this);
+      });
       clb && clb(res);
     });
   },
@@ -706,7 +710,8 @@ export default Backbone.Model.extend({
       Panels,
       Canvas,
       Keymaps,
-      RichTextEditor
+      RichTextEditor,
+      LayerManager
     } = this.attributes;
     this.stopDefault();
     DomComponents.clear();
@@ -716,6 +721,7 @@ export default Backbone.Model.extend({
     Canvas.getCanvasView().remove();
     Keymaps.removeAll();
     RichTextEditor.destroy();
+    LayerManager.destroy();
     this.view.remove();
     this.stopListening();
     this.clear({ silent: true });

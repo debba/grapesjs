@@ -1,20 +1,16 @@
 import Backbone from 'backbone';
 import { bindAll, isArray, isUndefined, debounce } from 'underscore';
-import { camelCase } from 'utils/mixins';
+import { camelCase, isObject } from 'utils/mixins';
 import { includes, each } from 'underscore';
 
 const clearProp = 'data-clear-style';
 
 export default Backbone.View.extend({
-  template(model) {
-    const pfx = this.pfx;
+  template() {
+    const { pfx, ppfx } = this;
     return `
-      <div class="${pfx}label">
-        ${this.templateLabel(model)}
-      </div>
-      <div class="${this.ppfx}fields">
-        ${this.templateInput(model)}
-      </div>
+      <div class="${pfx}label" data-sm-label></div>
+      <div class="${ppfx}fields" data-sm-fields></div>
     `;
   },
 
@@ -215,11 +211,11 @@ export default Backbone.View.extend({
 
   _getTargetData() {
     const { model, config } = this;
+    const targetValue = this.getTargetValue({ ignoreDefault: 1 });
+    const defaultValue = model.getDefaultValue();
+    const computedValue = this.getComputedValue();
     let value = '';
     let status = '';
-    let targetValue = this.getTargetValue({ ignoreDefault: 1 });
-    let defaultValue = model.getDefaultValue();
-    let computedValue = this.getComputedValue();
 
     if (targetValue) {
       value = targetValue;
@@ -230,7 +226,7 @@ export default Backbone.View.extend({
     } else if (
       computedValue &&
       config.showComputed &&
-      computedValue !== defaultValue
+      computedValue != defaultValue
     ) {
       value = computedValue;
 
@@ -255,6 +251,9 @@ export default Backbone.View.extend({
    * Fired when the target is changed
    * */
   targetUpdated(mod, val, opts = {}) {
+    //  Skip properties rendered in Stack Layers
+    if (this.config.fromLayer) return;
+
     this.emitUpdateTarget();
 
     if (!this.checkVisibility()) {
@@ -338,52 +337,24 @@ export default Backbone.View.extend({
    * @private
    */
   getTargetValue(opts = {}) {
-    var result;
-    var model = this.model;
-    var target = this.getTargetModel();
-
-    const properStrategy = this.model.get('useOwnStrategy');
-    const em = this.em;
-    const property = model.get('property');
-    const component = em && em.getSelected();
-
-    var customFetchValue = this.customValue;
+    let result;
+    const { model } = this;
+    const target = this.getTargetModel();
+    const customFetchValue = this.customValue;
 
     if (!target) {
       return result;
     }
 
-    if (
-      component &&
-      !isUndefined(component.getStyle()[model.get('property')])
-    ) {
-      result = component.getStyle()[model.get('property')];
-    } else {
-      result = target.getStyle()[model.get('property')];
-    }
+    result = target.getStyle()[model.get('property')];
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
     }
 
-    model.unset('newResult', { silent: true });
-
-    if (!isUndefined(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleFetch:property', property, model, result);
-        component.trigger(`ownStyleFetch:property:${property}`, model, result);
-      }
-      em.trigger(`ownStyleFetch:property:${property}`, model, result);
-      em.trigger('ownStyleFetch:property', property, model, result);
-
-      let newResult = model.get('newResult');
-
-      if (!isUndefined(newResult)) result = newResult;
-    }
-
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
       let index = model.collection.indexOf(model);
-      let customValue = customFetchValue(this, index);
+      let customValue = customFetchValue(this, index, result);
 
       if (customValue) {
         result = customValue;
@@ -407,7 +378,7 @@ export default Backbone.View.extend({
     const notToSkip = avoid.indexOf(property) < 0;
     const value = computed[property];
     const valueDef = computedDef[camelCase(property)];
-    return computed && notToSkip && valueDef !== value && value;
+    return (computed && notToSkip && valueDef !== value && value) || '';
   },
 
   /**
@@ -427,48 +398,17 @@ export default Backbone.View.extend({
    * @param {Object} opt  Options
    * */
   modelValueChanged(e, val, opt = {}) {
-    const em = this.config.em;
     const model = this.model;
-    const properStrategy = this.model.get('useOwnStrategy');
     const value = model.getFullValue();
-    const target = this.getTarget();
-    const prop = model.get('property');
-    const onChange = this.onChange;
 
     // Avoid element update if the change comes from it
     if (!opt.fromInput) {
       this.setValue(value);
     }
 
-    if (!isUndefined(properStrategy) && properStrategy) {
-      // Check if component is allowed to be styled
-      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
-        return;
-      }
-
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        // The onChange is used by Composite/Stack properties, so I'd avoid sending
-        // it back if the change comes from one of those
-        if (onChange && !opt.fromParent) {
-          onChange(target, this, opt);
-        } else {
-          this.updateTargetStyle(value, null, opt);
-        }
-      }
-
-      const component = em && em.getSelected();
-
-      if (em && component) {
-        em.trigger('component:update', component);
-        em.trigger('component:styleUpdate', component, prop);
-        em.trigger(`component:styleUpdate:${prop}`, component);
-      }
-    } else {
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        this.getTargets().forEach(target => this.__updateTarget(target, opt));
-      }
+    // Avoid target update if the changes comes from it
+    if (!opt.fromTarget) {
+      this.getTargets().forEach(target => this.__updateTarget(target, opt));
     }
   },
 
@@ -482,7 +422,7 @@ export default Backbone.View.extend({
     // Check if component is allowed to be styled
     if (
       !target ||
-      //!this.isTargetStylable(target) ||
+      !this.isTargetStylable(target) ||
       !this.isComponentStylable()
     ) {
       return;
@@ -499,6 +439,7 @@ export default Backbone.View.extend({
       }
     }
 
+    // TODO: use target if componentFirst
     const component = em && em.getSelected();
 
     if (em && component) {
@@ -518,13 +459,8 @@ export default Backbone.View.extend({
    */
   updateTargetStyle(value, name = '', opts = {}) {
     const property = name || this.model.get('property');
-    const properStrategy = this.model.get('useOwnStrategy');
-    const em = this.em;
-    const target = this.getTarget();
-    let style = target.getStyle();
-    const component = em && em.getSelected();
-
-    if (component) style = component.getStyle();
+    const target = opts.target || this.getTarget();
+    const style = target.getStyle();
 
     if (value) {
       style[property] = value;
@@ -539,30 +475,7 @@ export default Backbone.View.extend({
       delete style.__;
     }
 
-    target.unset('isOwnEdited');
-    if (!isUndefined(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleUpdate:property', property, value, target);
-        component.trigger(`ownStyleUpdate:property:${property}`, value, target);
-      }
-
-      em.trigger(`ownStyleUpdate:property:${property}`, value, target);
-      em.trigger(`ownStyleUpdate:property`, property, value, target);
-
-      let isOwnEdited = target.get('isOwnEdited');
-
-      if (isUndefined(isOwnEdited)) {
-        if (component) {
-          component.setStyle(style, opts);
-        } else target.setStyle(style, opts);
-      }
-    } else {
-      if (component) {
-        component.setStyle(style, opts);
-      } else {
-        target.setStyle(style, opts);
-      }
-    }
+    target.setStyle(style, opts);
 
     // Helper is used by `states` like ':hover' to show its preview
     const helper = this.getHelperModel();
@@ -711,16 +624,63 @@ export default Backbone.View.extend({
     this.$input = null;
   },
 
+  __update(value) {
+    const update = this.update && this.update.bind(this);
+    update &&
+      update({
+        ...this._getClbOpts(),
+        value
+      });
+  },
+
+  __change(...args) {
+    const emit = this.emit && this.emit.bind(this);
+    emit && emit(this._getClbOpts(), ...args);
+  },
+
+  __updateStyle(value, { complete, ...opts } = {}) {
+    const final = complete !== false;
+
+    if (isObject(value)) {
+      this.getTargets().forEach(target =>
+        target.addStyle(value, { avoidStore: !final })
+      );
+    } else {
+      this.model.setValueFromInput(value, complete, opts);
+    }
+
+    final && this.elementUpdated();
+  },
+
+  _getClbOpts() {
+    const { model, el } = this;
+    return {
+      el,
+      props: model.attributes,
+      setProps: (...args) => model.set(...args),
+      change: this.__change,
+      updateStyle: this.__updateStyle,
+      targets: this.getTargets()
+    };
+  },
+
   render() {
     this.clearCached();
-    const pfx = this.pfx;
-    const model = this.model;
-    const el = this.el;
+    const { pfx, model, el, $el } = this;
     const property = model.get('property');
     const full = model.get('full');
     const cls = model.get('className') || '';
     const className = `${pfx}property`;
-    el.innerHTML = this.template(model);
+
+    this.createdEl && this.__destroyFn(this._getClbOpts());
+    $el.empty().append(this.template(model));
+    $el.find('[data-sm-label]').append(this.templateLabel(model));
+    const create = this.create && this.create.bind(this);
+    this.createdEl = create && create(this._getClbOpts());
+    $el
+      .find('[data-sm-fields]')
+      .append(this.createdEl || this.templateInput(model));
+
     el.className = `${className} ${pfx}${model.get(
       'type'
     )} ${className}__${property} ${cls}`.trim();

@@ -20211,10 +20211,12 @@ module.exports = g;
 /*!********************************************!*\
   !*** ./src/asset_manager/config/config.js ***!
   \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = {
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
   // Default assets
   // eg. [
   //  'https://...image1.png',
@@ -20255,10 +20257,6 @@ module.exports = {
   //  ]
   // }
   autoAdd: 1,
-  // Text on upload input
-  uploadText: 'Drop files here or click to upload',
-  // Label for the add button
-  addBtnText: 'Add image',
   // To upload your assets, the module uses Fetch API, with this option you
   // overwrite it with something else.
   // It should return a Promise
@@ -20301,17 +20299,9 @@ module.exports = {
   //   if(stopUpload) return false;
   // }
   beforeUpload: null,
-  //Default placeholder for input
-  inputPlaceholder: 'http://path/to/the/image.jpg',
-  // Template for using a custom assets template
-  useCustomAssetsTemplate: '',
-  // Hide File uploader, it could be useful to render a file upload button block
-  // in custom assets template and keeping upload logic using html elements in
-  // FileUploader view
-  hideFileUploader: 0,
   // Toggles visiblity of assets url input
   showUrlInput: true
-};
+});
 
 /***/ }),
 
@@ -20325,7 +20315,6 @@ module.exports = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _config_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./config/config */ "./src/asset_manager/config/config.js");
-/* harmony import */ var _config_config__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_config_config__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _model_Assets__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./model/Assets */ "./src/asset_manager/model/Assets.js");
 /* harmony import */ var _view_AssetsView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./view/AssetsView */ "./src/asset_manager/view/AssetsView.js");
 /* harmony import */ var _view_FileUploader__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./view/FileUploader */ "./src/asset_manager/view/FileUploader.js");
@@ -20395,8 +20384,8 @@ __webpack_require__.r(__webpack_exports__);
 
       c = config || {};
 
-      for (var name in _config_config__WEBPACK_IMPORTED_MODULE_0___default.a) {
-        if (!(name in c)) c[name] = _config_config__WEBPACK_IMPORTED_MODULE_0___default.a[name];
+      for (var name in _config_config__WEBPACK_IMPORTED_MODULE_0__["default"]) {
+        if (!(name in c)) c[name] = _config_config__WEBPACK_IMPORTED_MODULE_0__["default"][name];
       }
 
       var ppfx = c.pStylePrefix;
@@ -20565,17 +20554,6 @@ __webpack_require__.r(__webpack_exports__);
      */
     getAssetsEl: function getAssetsEl() {
       return am.el.querySelector('[data-el=assets]');
-    },
-
-    /**
-     *  Get assets element container
-     * @param {string} template
-     * @param {boolean} hideFileUploader
-     */
-    useCustomAssetsTemplate: function useCustomAssetsTemplate(template) {
-      var hideFileUploader = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-      if (template !== '') c.useCustomAssetsTemplate = template;
-      c.hideFileUploader = hideFileUploader;
     },
 
     /**
@@ -20982,7 +20960,7 @@ __webpack_require__.r(__webpack_exports__);
       form = "\n          <form class=\"".concat(pfx, "add-asset\">\n            <div class=\"").concat(ppfx, "field ").concat(pfx, "add-field\">\n              <input placeholder=\"").concat(em && em.t('assetManager.inputPlh'), "\"/>\n            </div>\n            <button class=\"").concat(ppfx, "btn-prim\">").concat(em && em.t('assetManager.addButton'), "</button>\n            <div style=\"clear:both\"></div>\n          </form>\n      ");
     }
 
-    return view.config.useCustomAssetsTemplate || "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        ").concat(form, "\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
+    return "\n    <div class=\"".concat(pfx, "assets-cont\">\n      <div class=\"").concat(pfx, "assets-header\">\n        ").concat(form, "\n      </div>\n      <div class=\"").concat(pfx, "assets\" data-el=\"assets\"></div>\n      <div style=\"clear:both\"></div>\n    </div>\n    ");
   },
   initialize: function initialize(o) {
     this.options = o;
@@ -24081,6 +24059,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     var win = this.getWindow();
     var conf = em.get('Config');
     var extStyles = [];
+    win._isEditor = true;
     config.styles.forEach(function (href) {
       return extStyles.push(Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isString"])(href) ? {
         tag: 'link',
@@ -27599,8 +27578,9 @@ var cmdVis = 'sw-visibility';
     });
   },
   tglEffects: function tglEffects(on) {
+    var em = this.em;
     var mthEv = on ? 'on' : 'off';
-    this.em[mthEv]('run:tlb-move:before', this.preventDrag);
+    em && em[mthEv]('run:tlb-move:before', this.preventDrag);
   },
   run: function run(editor, sender) {
     var _this = this;
@@ -27732,14 +27712,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(backbone__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/modules/index-all.js");
 /* harmony import */ var utils_mixins__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
-/* harmony import */ var dom_components_view_ToolbarView__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! dom_components/view/ToolbarView */ "./src/dom_components/view/ToolbarView.js");
-/* harmony import */ var dom_components_model_Toolbar__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! dom_components/model/Toolbar */ "./src/dom_components/model/Toolbar.js");
+/* harmony import */ var utils_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! utils/dom */ "./src/utils/dom.js");
+/* harmony import */ var dom_components_view_ToolbarView__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! dom_components/view/ToolbarView */ "./src/dom_components/view/ToolbarView.js");
+/* harmony import */ var dom_components_model_Toolbar__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! dom_components/model/Toolbar */ "./src/dom_components/model/Toolbar.js");
 
 
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1___default()(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 
 
 
@@ -27771,7 +27753,7 @@ var showOffsets;
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   init: function init(o) {
-    Object(underscore__WEBPACK_IMPORTED_MODULE_3__["bindAll"])(this, 'onHover', 'onOut', 'onClick', 'onFrameScroll', 'onFrameUpdated');
+    Object(underscore__WEBPACK_IMPORTED_MODULE_3__["bindAll"])(this, 'onHover', 'onOut', 'onClick', 'onFrameScroll', 'onFrameUpdated', 'onContainerChange');
   },
   enable: function enable() {
     this.frameOff = this.canvasOff = this.adjScroll = null;
@@ -27804,11 +27786,17 @@ var showOffsets;
     var _this = this;
 
     var em = this.em;
+    var listenToEl = em.getConfig('listenToEl');
+
+    var _em$getContainer = em.getContainer(),
+        parentNode = _em$getContainer.parentNode;
+
     var method = enable ? 'on' : 'off';
     var methods = {
       on: utils_mixins__WEBPACK_IMPORTED_MODULE_4__["on"],
       off: utils_mixins__WEBPACK_IMPORTED_MODULE_4__["off"]
     };
+    !listenToEl.length && parentNode && listenToEl.push(parentNode);
 
     var trigger = function trigger(win, body) {
       methods[method](body, 'mouseover', _this.onHover);
@@ -27818,6 +27806,7 @@ var showOffsets;
     };
 
     methods[method](window, 'resize', this.onFrameUpdated);
+    methods[method](listenToEl, 'scroll', this.onContainerChange);
     em[method]('component:toggled', this.onSelect, this);
     em[method]('change:componentHovered', this.onHovered, this);
     em[method]('component:resize component:styleUpdate component:input', this.updateGlobalPos, this);
@@ -27847,7 +27836,7 @@ var showOffsets;
     if (!model) {
       var parent = $el.parent();
 
-      while (!model && parent.length > 0) {
+      while (!model && parent.length && !Object(utils_dom__WEBPACK_IMPORTED_MODULE_5__["isDoc"])(parent[0])) {
         model = parent.data('model');
         parent = parent.parent();
       }
@@ -27911,7 +27900,7 @@ var showOffsets;
     var el = view && view.el;
     var result = {};
 
-    if (el) {
+    if (el && Object(utils_dom__WEBPACK_IMPORTED_MODULE_5__["isVisible"])(el)) {
       var pos = this.getElementPos(el);
       result = {
         el: el,
@@ -27950,6 +27939,8 @@ var showOffsets;
 
     this.currentDoc = null;
     this.em.setHovered(0);
+    this.elHovered = 0;
+    this.updateToolsLocal();
     this.canvas.getFrames().forEach(function (frame) {
       var view = frame.view;
       var el = view && view.getToolsEl();
@@ -28041,7 +28032,7 @@ var showOffsets;
     if (!model) {
       var parent = $el.parent();
 
-      while (!model && parent.length > 0) {
+      while (!model && parent.length && !Object(utils_dom__WEBPACK_IMPORTED_MODULE_5__["isDoc"])(parent[0])) {
         model = parent.data('model');
         parent = parent.parent();
       }
@@ -28331,8 +28322,8 @@ var showOffsets;
 
       if (!this.toolbar) {
         toolbarEl.innerHTML = '';
-        this.toolbar = new dom_components_model_Toolbar__WEBPACK_IMPORTED_MODULE_6__["default"](toolbar);
-        var toolbarView = new dom_components_view_ToolbarView__WEBPACK_IMPORTED_MODULE_5__["default"]({
+        this.toolbar = new dom_components_model_Toolbar__WEBPACK_IMPORTED_MODULE_7__["default"](toolbar);
+        var toolbarView = new dom_components_view_ToolbarView__WEBPACK_IMPORTED_MODULE_6__["default"]({
           collection: this.toolbar,
           editor: this.editor,
           em: em
@@ -28498,6 +28489,9 @@ var showOffsets;
   updateAttached: Object(underscore__WEBPACK_IMPORTED_MODULE_3__["debounce"])(function () {
     this.updateGlobalPos();
   }),
+  onContainerChange: Object(underscore__WEBPACK_IMPORTED_MODULE_3__["debounce"])(function () {
+    this.em.refreshCanvas();
+  }, 150),
 
   /**
    * Returns element's data info
@@ -31473,6 +31467,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
   /**
    * Update attributes of the component
    * @param {Object} attrs Key value attributes
+   * @param {Object} options Options for the model update
    * @return {this}
    * @example
    * component.setAttributes({ id: 'test', 'data-key': 'value' });
@@ -31486,14 +31481,17 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
   /**
    * Add attributes to the component
    * @param {Object} attrs Key value attributes
+   * @param {Object} options Options for the model update
    * @return {this}
    * @example
    * component.addAttributes({ 'data-key': 'value' });
    */
   addAttributes: function addAttributes(attrs) {
+    var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
     var newAttrs = _objectSpread({}, this.getAttributes(), {}, attrs);
 
-    this.setAttributes(newAttrs);
+    this.setAttributes(newAttrs, opts);
     return this;
   },
 
@@ -33473,6 +33471,7 @@ var ytnc = 'ytnc';
     autoplay: 0,
     controls: 1,
     color: '',
+    list: '',
     rel: 1,
     // YT related videos
     modestbranding: 0,
@@ -33541,6 +33540,7 @@ var ytnc = 'ytnc';
       case vi:
         var videoId = uri.pathname.split('/').pop();
         this.set('videoId', videoId);
+        qr.list && this.set('list', qr.list);
         if (qr.autoplay) this.set('autoplay', 1);
         if (qr.loop) this.set('loop', 1);
         if (parseInt(qr.controls) === 0) this.set('controls', 0);
@@ -33748,7 +33748,9 @@ var ytnc = 'ytnc';
   getYoutubeSrc: function getYoutubeSrc() {
     var id = this.get('videoId');
     var url = this.get('ytUrl');
-    url += id + '?';
+    var list = this.get('list');
+    url += id + (id.indexOf('?') < 0 ? '?' : '');
+    url += list ? "&list=".concat(list) : '';
     url += this.get('autoplay') ? '&autoplay=1' : '';
     url += !this.get('controls') ? '&controls=0&showinfo=0' : ''; // Loop works only with playlist enabled
     // https://stackoverflow.com/questions/25779966/youtube-iframe-loop-doesnt-work
@@ -33997,7 +33999,9 @@ var Component;
     } else if (Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isArray"])(models)) {
       models.forEach(function (item, index) {
         if (Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isString"])(item)) {
-          models[index] = _this3.parseString(item, opt);
+          var nodes = _this3.parseString(item, opt);
+
+          models[index] = Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isArray"])(nodes) && !nodes.length ? null : nodes;
         }
       });
     }
@@ -34540,18 +34544,29 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(backbone__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _ComponentView__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ComponentView */ "./src/dom_components/view/ComponentView.js");
 
-/* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_0___default.a.View.extend({
+/* harmony default export */ __webpack_exports__["default"] = (_ComponentView__WEBPACK_IMPORTED_MODULE_0__["default"].extend({
   initialize: function initialize() {
-    var $el = this.$el,
-        model = this.model;
-    $el.data('model', model);
-    model.view = this;
+    _ComponentView__WEBPACK_IMPORTED_MODULE_0__["default"].prototype.initialize.apply(this, arguments);
   },
+  // Clear methods used on Nodes with attributes
+  _setAttributes: function _setAttributes() {},
+  renderAttributes: function renderAttributes() {},
+  setAttribute: function setAttribute() {},
+  updateAttributes: function updateAttributes() {},
+  initClasses: function initClasses() {},
+  initComponents: function initComponents() {},
+  delegateEvents: function delegateEvents() {},
   _createElement: function _createElement() {
-    return document.createTextNode(this.model.get('content'));
+    return document.createTextNode('');
+  },
+  render: function render() {
+    var model = this.model,
+        el = this.el;
+    if (model.opt.temporary) return this;
+    el.textContent = model.get('content');
+    return this;
   }
 }));
 
@@ -34657,20 +34672,9 @@ var compProt = _ComponentView__WEBPACK_IMPORTED_MODULE_2__["default"].prototype;
    * @return string
    */
   getContent: function getContent() {
-    var rte = this.rte;
-
-    var _ref = rte || {},
-        activeRte = _ref.activeRte;
-
-    var content = '';
-
-    if (activeRte && typeof activeRte.getContent === 'function') {
-      content = activeRte.getContent();
-    } else {
-      content = this.getChildrenContainer().innerHTML;
-    }
-
-    return content;
+    var activeRte = this.activeRte;
+    var canGetRteContent = activeRte && typeof activeRte.getContent === 'function';
+    return canGetRteContent ? activeRte.getContent() : this.getChildrenContainer().innerHTML;
   },
 
   /**
@@ -36116,7 +36120,11 @@ var View = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.View;
         view = definition.view,
         isType = definition.isType;
     model = model instanceof Model || Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isFunction"])(model) ? model : ModelInst.extend(model || {});
-    view = view instanceof View || Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isFunction"])(view) ? view : ViewInst.extend(view || {});
+    view = view instanceof View || Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isFunction"])(view) ? view : ViewInst.extend(view || {}); // New API
+
+    if (this.extendViewApi && !definition.model && !definition.view) {
+      view = view.extend(definition);
+    }
 
     if (type) {
       type.model = model;
@@ -36882,6 +36890,13 @@ __webpack_require__.r(__webpack_exports__);
   // 'translate' - Use translate CSS from transform property
   // To get more about this feature read: https://github.com/artf/grapesjs/issues/1936
   dragMode: 0,
+  // When the editor is placed in a scrollable container (eg. modals) this might
+  // cause elements inside the canvas (eg. floating toolbars) to be misaligned.
+  // To avoid that, you can specify an array of DOM elements on which their scroll will
+  // trigger the canvas update.
+  // Be default, if the array is empty, the first parent element will be appended.
+  // listenToEl: [document.querySelector('#scrollable-el')],
+  listenToEl: [],
   // Import asynchronously CSS to use as icons
   cssIcons: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
   // Dom element
@@ -37963,7 +37978,8 @@ var logs = {
    * @private
    */
   getSelectedAll: function getSelectedAll() {
-    return this.get('selected').models;
+    var sel = this.get('selected');
+    return sel && sel.models || [];
   },
 
   /**
@@ -38232,7 +38248,8 @@ var logs = {
     var clb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     this.getCacheLoad(1, function (res) {
       _this9.get('storables').forEach(function (module) {
-        return module.load(res);
+        module.load(res);
+        module.postLoad && module.postLoad(_this9);
       });
 
       clb && clb(res);
@@ -39030,7 +39047,7 @@ var defaultConfig = {
   editors: editors,
   plugins: plugins,
   // Will be replaced on build
-  version: '0.16.18',
+  version: '0.16.22',
 
   /**
    * Initialize the editor with passed options
@@ -40020,7 +40037,8 @@ var ItemsView;
    * */
   toggleVisibility: function toggleVisibility(e) {
     e && e.stopPropagation();
-    var model = this.model;
+    var model = this.model,
+        em = this.em;
     var prevDspKey = '__prev-display';
     var prevDisplay = model.get(prevDspKey);
     var style = model.getStyle();
@@ -40040,6 +40058,7 @@ var ItemsView;
     }
 
     model.setStyle(style);
+    em && em.trigger('component:toggled'); // Updates Style Manager #2938
   },
 
   /**
@@ -45278,7 +45297,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     /**
      * Get property by its CSS name and sector id
      * @param  {string} sectorId Sector id
-     * @param  {string} name CSS property name, eg. 'min-height'
+     * @param  {string} name CSS property name (or id), eg. 'min-height'
      * @return {Property|null}
      * @example
      * var property = styleManager.getProperty('mySector','min-height');
@@ -45287,16 +45306,15 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
       var sector = this.getSector(sectorId, {
         warn: 1
       });
-      var prop = null;
+      var prop;
 
       if (sector) {
-        prop = sector.get('properties').where({
-          property: name
-        });
-        prop = prop.length == 1 ? prop[0] : prop;
+        prop = sector.get('properties').filter(function (prop) {
+          return prop.get('property') === name || prop.get('id') === name;
+        })[0];
       }
 
-      return prop;
+      return prop || null;
     },
 
     /**
@@ -45391,15 +45409,29 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
      *                            and `isType` function which recognize the type of the
      *                            passed entity
      *@example
-     * styleManager.addType('my-type', {
-     *  model: {},
-     *  view: {},
-     *  isType: (value) => {
-     *    if (value && value.type == 'my-type') {
-     *      return value;
-     *    }
-     *  },
-     * })
+     * styleManager.addType('my-custom-prop', {
+        create({ props, change }) {
+          const el = document.createElement('div');
+          el.innerHTML = '<input type="range" class="my-input" min="10" max="50"/>';
+          const inputEl = el.querySelector('.my-input');
+          inputEl.addEventListener('change', event => change({ event })); // change will trigger the emit
+          inputEl.addEventListener('input', event => change({ event, complete: false }));
+          return el;
+        },
+         emit({ props, updateStyle }, { event, complete }) {
+          const { value } = event.target;
+          const valueRes = value + 'px';
+          // Pass a string value for the exact CSS property or an object containing multiple properties
+          // eg. updateStyle({ [props.property]: valueRes, color: 'red' });
+          updateStyle(valueRes, { complete });
+        },
+         update({ value, el }) {
+          el.querySelector('.my-input').value = parseInt(value, 10);
+        },
+         destroy() {
+          // In order to prevent memory leaks, use this method to clean, eventually, created instances, global event listeners, etc.
+        }
+      })
      */
     addType: function addType(id, definition) {
       properties.addType(id, definition);
@@ -45762,6 +45794,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 
 /* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_1___default.a.Collection.extend(domain_abstract_model_TypeableCollection__WEBPACK_IMPORTED_MODULE_2__["default"]).extend({
+  extendViewApi: 1,
   types: [{
     id: 'stack',
     model: _PropertyStack__WEBPACK_IMPORTED_MODULE_4__["default"],
@@ -46119,7 +46152,8 @@ var Property = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.Model.extend({
     }
 
     if (fn && hasValue) {
-      value = "".concat(fn, "(").concat(value, ")");
+      var fnParameter = fn === 'url' ? "'".concat(value.replace(/'/g, ''), "'") : value;
+      value = "".concat(fn, "(").concat(fnParameter, ")");
     }
 
     if (hasValue && this.get('important')) {
@@ -47606,14 +47640,22 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/modules/index-all.js");
-/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
-/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(backbone__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _PropertiesView__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./PropertiesView */ "./src/style_manager/view/PropertiesView.js");
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/defineProperty.js");
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/modules/index-all.js");
+/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
+/* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(backbone__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _PropertiesView__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./PropertiesView */ "./src/style_manager/view/PropertiesView.js");
+
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default()(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_1___default.a.View.extend({
+
+/* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_2___default.a.View.extend({
   events: {
     click: 'active',
     'click [data-close-layer]': 'removeItem',
@@ -47667,7 +47709,7 @@ __webpack_require__.r(__webpack_exports__);
         props = this.props;
     var coll = model.collection;
     var stackModel = this.stackModel;
-    backbone__WEBPACK_IMPORTED_MODULE_1___default.a.View.prototype.remove.apply(this, arguments);
+    backbone__WEBPACK_IMPORTED_MODULE_2___default.a.View.prototype.remove.apply(this, arguments);
     coll && coll.contains(model) && coll.remove(model);
 
     if (stackModel && stackModel.set) {
@@ -47724,11 +47766,11 @@ __webpack_require__.r(__webpack_exports__);
     if (preview && stackModel && previewEl) {
       var style = previewEl.style;
 
-      if (Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isString"])(preview)) {
+      if (Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isString"])(preview)) {
         style[stackModel.get('property')] = preview;
       } else {
         var prvStr = [];
-        Object(underscore__WEBPACK_IMPORTED_MODULE_0__["each"])(preview, function (val, prop) {
+        Object(underscore__WEBPACK_IMPORTED_MODULE_1__["each"])(preview, function (val, prop) {
           return prvStr.push("".concat(prop, ":").concat(val));
         });
         previewEl.setAttribute('style', prvStr.join(';'));
@@ -47767,9 +47809,11 @@ __webpack_require__.r(__webpack_exports__);
         el = this.el,
         pfx = this.pfx;
     var preview = model.get('preview');
-    var properties = new _PropertiesView__WEBPACK_IMPORTED_MODULE_2__["default"]({
+    var properties = new _PropertiesView__WEBPACK_IMPORTED_MODULE_3__["default"]({
       collection: model.get('properties'),
-      config: this.config,
+      config: _objectSpread({}, this.config, {
+        fromLayer: 1
+      }),
       target: propsConfig.target,
       customValue: propsConfig.customValue,
       propTarget: propsConfig.propTarget,
@@ -48674,7 +48718,7 @@ var cssGen = new code_manager_model_CssGenerator__WEBPACK_IMPORTED_MODULE_4__["d
       preview: model.get('preview'),
       config: this.config,
       propsConfig: propsConfig
-    });
+    }); // For detached properties, used in inputValueChanged (eg. clear all)
 
     var PropertiesView = __webpack_require__(/*! ./PropertiesView */ "./src/style_manager/view/PropertiesView.js").default;
 
@@ -48964,16 +49008,31 @@ var cssGen = new code_manager_model_CssGenerator__WEBPACK_IMPORTED_MODULE_4__["d
       // Things to do when a single sub-property is changed
       onChange: function onChange(el, view, opt) {
         var subModel = view.model;
+        var status = model.get('status');
 
         if (model.get('detached')) {
           var subProp = subModel.get('property');
           var defVal = subModel.getDefaultValue();
-          var values = self.getLayers().getPropertyValues(subProp, defVal);
-          view.updateTargetStyle(values, null, opt);
+          var layers = self.getLayers();
+          var values = layers.getPropertyValues(subProp, defVal);
+          view.updateTargetStyle(values, null, opt); // Update also the target with values of special hidden properties.
+          // This fixes the case of update with computed layers
+
+          if (subProp == 'background-image' && !opt.avoidStore && status == 'computed') {
+            model.get('properties').filter(function (prop) {
+              return prop.get('property').substr(0, 2) == '__';
+            }).forEach(function (prop) {
+              var name = prop.get('property');
+              var value = layers.getPropertyValues(name, prop.getDefaultValue());
+              self.getTargets().forEach(function (tr) {
+                return tr.addStyle(_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0___default()({}, name, value), opt);
+              });
+            });
+          }
         } else {
           // Update only if there is an actual update (to avoid changes for computed styles)
           // ps: status is calculated in `targetUpdated` method
-          if (model.get('status') == 'updated') {
+          if (status == 'updated') {
             var value = model.getFullValue();
             model.set('value', value, opt); // Try to remove detached properties
 
@@ -49026,9 +49085,10 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 var clearProp = 'data-clear-style';
 /* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_2___default.a.View.extend({
-  template: function template(model) {
-    var pfx = this.pfx;
-    return "\n      <div class=\"".concat(pfx, "label\">\n        ").concat(this.templateLabel(model), "\n      </div>\n      <div class=\"").concat(this.ppfx, "fields\">\n        ").concat(this.templateInput(model), "\n      </div>\n    ");
+  template: function template() {
+    var pfx = this.pfx,
+        ppfx = this.ppfx;
+    return "\n      <div class=\"".concat(pfx, "label\" data-sm-label></div>\n      <div class=\"").concat(ppfx, "fields\" data-sm-fields></div>\n    ");
   },
   templateLabel: function templateLabel(model) {
     var pfx = this.pfx,
@@ -49054,7 +49114,7 @@ var clearProp = 'data-clear-style';
     var _this = this;
 
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    Object(underscore__WEBPACK_IMPORTED_MODULE_3__["bindAll"])(this, 'targetUpdated');
+    Object(underscore__WEBPACK_IMPORTED_MODULE_3__["bindAll"])(this, 'targetUpdated', '__change', '__updateStyle');
     this.config = o.config || {};
     var em = this.config.em;
     this.em = em;
@@ -49071,6 +49131,7 @@ var clearProp = 'data-clear-style';
     var pfx = this.pfx;
     this.inputHolderId = '#' + pfx + 'input-holder';
     this.sector = model.collection && model.collection.sector;
+    this.__destroyFn = this.destroy ? this.destroy.bind(this) : function () {};
     model.view = this;
 
     if (!model.get('value')) {
@@ -49094,6 +49155,11 @@ var clearProp = 'data-clear-style';
     this.listenTo(model, 'change:name change:className change:full', this.render);
     var init = this.init && this.init.bind(this);
     init && init();
+  },
+  remove: function remove() {
+    backbone__WEBPACK_IMPORTED_MODULE_2___default.a.View.prototype.remove.apply(this, arguments);
+
+    this.__destroyFn(this._getClbOpts());
   },
 
   /**
@@ -49192,6 +49258,7 @@ var clearProp = 'data-clear-style';
    */
   inputValueChanged: function inputValueChanged(ev) {
     ev && ev.stopPropagation();
+    if (this.emit) return;
     this.model.setValueFromInput(this.getInputValue());
     this.elementUpdated();
   },
@@ -49214,13 +49281,13 @@ var clearProp = 'data-clear-style';
   _getTargetData: function _getTargetData() {
     var model = this.model,
         config = this.config;
-    var value = '';
-    var status = '';
     var targetValue = this.getTargetValue({
       ignoreDefault: 1
     });
     var defaultValue = model.getDefaultValue();
     var computedValue = this.getComputedValue();
+    var value = '';
+    var status = '';
 
     if (targetValue) {
       value = targetValue;
@@ -49228,7 +49295,7 @@ var clearProp = 'data-clear-style';
       if (config.highlightChanged) {
         status = 'updated';
       }
-    } else if (computedValue && config.showComputed && computedValue !== defaultValue) {
+    } else if (computedValue && config.showComputed && computedValue != defaultValue) {
       value = computedValue;
 
       if (config.highlightComputed) {
@@ -49253,6 +49320,8 @@ var clearProp = 'data-clear-style';
    * */
   targetUpdated: function targetUpdated(mod, val) {
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    //  Skip properties rendered in Stack Layers
+    if (this.config.fromLayer) return;
     this.emitUpdateTarget();
 
     if (!this.checkVisibility()) {
@@ -49346,45 +49415,21 @@ var clearProp = 'data-clear-style';
     var result;
     var model = this.model;
     var target = this.getTargetModel();
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
-    var property = model.get('property');
-    var component = em && em.getSelected();
     var customFetchValue = this.customValue;
 
     if (!target) {
       return result;
     }
 
-    if (component && !Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(component.getStyle()[model.get('property')])) {
-      result = component.getStyle()[model.get('property')];
-    } else {
-      result = target.getStyle()[model.get('property')];
-    }
+    result = target.getStyle()[model.get('property')];
 
     if (!result && !opts.ignoreDefault) {
       result = model.getDefaultValue();
     }
 
-    model.unset('newResult', {
-      silent: true
-    });
-
-    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleFetch:property', property, model, result);
-        component.trigger("ownStyleFetch:property:".concat(property), model, result);
-      }
-
-      em.trigger("ownStyleFetch:property:".concat(property), model, result);
-      em.trigger('ownStyleFetch:property', property, model, result);
-      var newResult = model.get('newResult');
-      if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(newResult)) result = newResult;
-    }
-
     if (typeof customFetchValue == 'function' && !opts.ignoreCustomValue) {
       var index = model.collection.indexOf(model);
-      var customValue = customFetchValue(this, index);
+      var customValue = customFetchValue(this, index, result);
 
       if (customValue) {
         result = customValue;
@@ -49408,7 +49453,7 @@ var clearProp = 'data-clear-style';
     var notToSkip = avoid.indexOf(property) < 0;
     var value = computed[property];
     var valueDef = computedDef[Object(utils_mixins__WEBPACK_IMPORTED_MODULE_4__["camelCase"])(property)];
-    return computed && notToSkip && valueDef !== value && value;
+    return computed && notToSkip && valueDef !== value && value || '';
   },
 
   /**
@@ -49431,57 +49476,18 @@ var clearProp = 'data-clear-style';
     var _this3 = this;
 
     var opt = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    var em = this.config.em;
     var model = this.model;
-    var properStrategy = this.model.get('useOwnStrategy');
-    var value = model.getFullValue();
-    var target = this.getTarget();
-    var prop = model.get('property');
-    var onChange = this.onChange; // Avoid element update if the change comes from it
+    var value = model.getFullValue(); // Avoid element update if the change comes from it
 
     if (!opt.fromInput) {
       this.setValue(value);
-    }
-
-    console.log("properStrategy", properStrategy);
-    console.log({
-      target: target,
-      isTargetStylable: this.isTargetStylable(),
-      isComponentStylable: this.isComponentStylable(),
-      fromTarget: opt.fromTarget
-    });
-
-    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
-      // Check if component is allowed to be styled
-      if (!target || !this.isTargetStylable() || !this.isComponentStylable()) {
-        return;
-      } // Avoid target update if the changes comes from it
+    } // Avoid target update if the changes comes from it
 
 
-      if (!opt.fromTarget) {
-        // The onChange is used by Composite/Stack properties, so I'd avoid sending
-        // it back if the change comes from one of those
-        if (onChange && !opt.fromParent) {
-          onChange(target, this, opt);
-        } else {
-          this.updateTargetStyle(value, null, opt);
-        }
-      }
-
-      var component = em && em.getSelected();
-
-      if (em && component) {
-        em.trigger('component:update', component);
-        em.trigger('component:styleUpdate', component, prop);
-        em.trigger("component:styleUpdate:".concat(prop), component);
-      }
-    } else {
-      // Avoid target update if the changes comes from it
-      if (!opt.fromTarget) {
-        this.getTargets().forEach(function (target) {
-          return _this3.__updateTarget(target, opt);
-        });
-      }
+    if (!opt.fromTarget) {
+      this.getTargets().forEach(function (target) {
+        return _this3.__updateTarget(target, opt);
+      });
     }
   },
   __updateTarget: function __updateTarget(target) {
@@ -49507,7 +49513,8 @@ var clearProp = 'data-clear-style';
           target: target
         }));
       }
-    }
+    } // TODO: use target if componentFirst
+
 
     var component = em && em.getSelected();
 
@@ -49530,12 +49537,8 @@ var clearProp = 'data-clear-style';
     var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
     var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     var property = name || this.model.get('property');
-    var properStrategy = this.model.get('useOwnStrategy');
-    var em = this.em;
-    var target = this.getTarget();
+    var target = opts.target || this.getTarget();
     var style = target.getStyle();
-    var component = em && em.getSelected();
-    if (component) style = component.getStyle();
 
     if (value) {
       style[property] = value;
@@ -49550,31 +49553,7 @@ var clearProp = 'data-clear-style';
       delete style.__;
     }
 
-    target.unset('isOwnEdited');
-
-    if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(properStrategy) && properStrategy) {
-      if (component) {
-        component.trigger('ownStyleUpdate:property', property, value, target);
-        component.trigger("ownStyleUpdate:property:".concat(property), value, target);
-      }
-
-      em.trigger("ownStyleUpdate:property:".concat(property), value, target);
-      em.trigger("ownStyleUpdate:property", property, value, target);
-      var isOwnEdited = target.get('isOwnEdited');
-
-      if (Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(isOwnEdited)) {
-        if (component) {
-          component.setStyle(style, opts);
-        } else target.setStyle(style, opts);
-      }
-    } else {
-      if (component) {
-        component.setStyle(style, opts);
-      } else {
-        target.setStyle(style, opts);
-      }
-    } // Helper is used by `states` like ':hover' to show its preview
-
+    target.setStyle(style, opts); // Helper is used by `states` like ':hover' to show its preview
 
     var helper = this.getHelperModel();
     helper && helper.setStyle(style, opts);
@@ -49681,6 +49660,7 @@ var clearProp = 'data-clear-style';
   setValue: function setValue(value) {
     var model = this.model;
     var val = Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isUndefined"])(value) ? model.getDefaultValue() : value;
+    if (this.update) return this.__update(val);
     var input = this.getInputEl();
     input && (input.value = val);
   },
@@ -49712,16 +49692,70 @@ var clearProp = 'data-clear-style';
     this.input = null;
     this.$input = null;
   },
+  __update: function __update(value) {
+    var update = this.update && this.update.bind(this);
+    update && update(_objectSpread({}, this._getClbOpts(), {
+      value: value
+    }));
+  },
+  __change: function __change() {
+    var emit = this.emit && this.emit.bind(this);
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    emit && emit.apply(void 0, [this._getClbOpts()].concat(args));
+  },
+  __updateStyle: function __updateStyle(value) {
+    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        complete = _ref.complete,
+        opts = _babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_0___default()(_ref, ["complete"]);
+
+    var final = complete !== false;
+
+    if (Object(utils_mixins__WEBPACK_IMPORTED_MODULE_4__["isObject"])(value)) {
+      this.getTargets().forEach(function (target) {
+        return target.addStyle(value, {
+          avoidStore: !final
+        });
+      });
+    } else {
+      this.model.setValueFromInput(value, complete, opts);
+    }
+
+    final && this.elementUpdated();
+  },
+  _getClbOpts: function _getClbOpts() {
+    var model = this.model,
+        el = this.el;
+    return {
+      el: el,
+      props: model.attributes,
+      setProps: function setProps() {
+        return model.set.apply(model, arguments);
+      },
+      change: this.__change,
+      updateStyle: this.__updateStyle,
+      targets: this.getTargets()
+    };
+  },
   render: function render() {
     this.clearCached();
-    var pfx = this.pfx;
-    var model = this.model;
-    var el = this.el;
+    var pfx = this.pfx,
+        model = this.model,
+        el = this.el,
+        $el = this.$el;
     var property = model.get('property');
     var full = model.get('full');
     var cls = model.get('className') || '';
     var className = "".concat(pfx, "property");
-    el.innerHTML = this.template(model);
+    this.createdEl && this.__destroyFn(this._getClbOpts());
+    $el.empty().append(this.template(model));
+    $el.find('[data-sm-label]').append(this.templateLabel(model));
+    var create = this.create && this.create.bind(this);
+    this.createdEl = create && create(this._getClbOpts());
+    $el.find('[data-sm-fields]').append(this.createdEl || this.templateInput(model));
     el.className = "".concat(className, " ").concat(pfx).concat(model.get('type'), " ").concat(className, "__").concat(property, " ").concat(cls).trim();
     el.className += full ? " ".concat(className, "--full") : '';
     this.updateStatus();
@@ -50369,17 +50403,12 @@ __webpack_require__.r(__webpack_exports__);
       for (var i = 0; i < props.length; i++) {
         var obj = {};
         var prop = props[i];
-        obj.name = prop; // Define type
+        obj.name = prop;
 
         switch (prop) {
           case 'target':
             obj.type = 'select';
-            break;
-        } // Define options
-
-
-        switch (prop) {
-          case 'target':
+            obj.default = false;
             obj.options = config.optionsTarget;
             break;
         }
@@ -50740,6 +50769,7 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_0___default.a.$;
           em = this.em;
       var propName = model.get('name');
       var opts = model.get('options') || [];
+      var values = [];
       var input = '<select>';
       opts.forEach(function (el) {
         var attrs = '';
@@ -50757,11 +50787,13 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_0___default.a.$;
 
         var resultName = em.t("traitManager.traits.options.".concat(propName, ".").concat(value)) || name;
         input += "<option value=\"".concat(value, "\"").concat(attrs, ">").concat(resultName, "</option>");
+        values.push(value);
       });
       input += '</select>';
       this.$input = $(input);
       var val = model.getTargetValue();
-      !Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isUndefined"])(val) && this.$input.val(val);
+      var valResult = values.indexOf(val) >= 0 ? val : model.get('default');
+      !Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isUndefined"])(valResult) && this.$input.val(valResult);
     }
 
     return this.$input.get(0);
@@ -55366,13 +55398,6 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
    */
   closest: function closest(el, selector) {
     if (!el) return;
-    /**
-     * [Fix in case of empty block]
-     * check before the block and
-     * after that, all of parentNodes
-     */
-
-    if (selector !== '*' && this.matches(el, selector)) return el;
     var elem = el.parentNode;
 
     while (elem && elem.nodeType === 1) {
@@ -55532,11 +55557,14 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
    * Highlight target
    * @param  {Model|null} model
    */
-  selectTargetModel: function selectTargetModel(model) {
+  selectTargetModel: function selectTargetModel(model, source) {
     if (model instanceof backbone__WEBPACK_IMPORTED_MODULE_1___default.a.Collection) {
       return;
-    }
+    } // Prevents loops in Firefox
+    // https://github.com/artf/grapesjs/issues/2911
 
+
+    if (source && source === model) return;
     var targetModel = this.targetModel; // Reset the previous model but not if it's the same as the source
     // https://github.com/artf/grapesjs/issues/2478#issuecomment-570314736
 
@@ -55586,7 +55614,7 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
     var dims = this.dimsFromTarget(e.target, rX, rY);
     var target = this.target;
     var targetModel = target && this.getTargetModel(target);
-    this.selectTargetModel(targetModel);
+    this.selectTargetModel(targetModel, sourceModel);
     if (!targetModel) plh.style.display = 'none';
     if (!target) return;
     this.lastDims = dims;
@@ -56310,12 +56338,14 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_1___default.a.$;
 /*!**************************!*\
   !*** ./src/utils/dom.js ***!
   \**************************/
-/*! exports provided: motionsEv, empty, replaceWith, appendAtIndex, append, createEl, createCustomEvent, appendVNodes */
+/*! exports provided: motionsEv, isDoc, isVisible, empty, replaceWith, appendAtIndex, append, createEl, createCustomEvent, appendVNodes */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "motionsEv", function() { return motionsEv; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isDoc", function() { return isDoc; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isVisible", function() { return isVisible; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "empty", function() { return empty; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "replaceWith", function() { return replaceWith; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "appendAtIndex", function() { return appendAtIndex; });
@@ -56330,6 +56360,12 @@ var KEY_TAG = 'tag';
 var KEY_ATTR = 'attributes';
 var KEY_CHILD = 'children';
 var motionsEv = 'transitionend oTransitionEnd transitionend webkitTransitionEnd';
+var isDoc = function isDoc(el) {
+  return el && el.nodeType === 9;
+};
+var isVisible = function isVisible(el) {
+  return el && !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+};
 var empty = function empty(node) {
   while (node.firstChild) {
     node.removeChild(node.firstChild);
@@ -56673,7 +56709,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!*****************************!*\
   !*** ./src/utils/mixins.js ***!
   \*****************************/
-/*! exports provided: isCommentNode, isTaggableNode, on, off, hasDnd, upFirst, matches, getModel, getElRect, camelCase, isTextNode, getKeyCode, getKeyChar, isEscKey, getElement, shallowDiff, normalizeFloat, getPointerEvent, getUnitFromValue, capitalize, getViewEl, setViewEl, appendStyles, isComponent, isRule */
+/*! exports provided: isCommentNode, isTaggableNode, on, off, hasDnd, upFirst, matches, getModel, getElRect, camelCase, isTextNode, getKeyCode, getKeyChar, isEscKey, getElement, shallowDiff, normalizeFloat, getPointerEvent, getUnitFromValue, capitalize, getViewEl, setViewEl, appendStyles, isObject, isComponent, isRule */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -56701,11 +56737,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getViewEl", function() { return getViewEl; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setViewEl", function() { return setViewEl; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "appendStyles", function() { return appendStyles; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isObject", function() { return isObject; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isComponent", function() { return isComponent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isRule", function() { return isRule; });
-/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/toConsumableArray.js");
-/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/modules/index-all.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/toConsumableArray.js");
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/modules/index-all.js");
+
 
 
 var elProt = window.Element.prototype;
@@ -56717,7 +56757,7 @@ var matches = elProt.matches || elProt.webkitMatchesSelector || elProt.mozMatche
 
 var appendStyles = function appendStyles(styles) {
   var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var stls = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isArray"])(styles) ? _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0___default()(styles) : [styles];
+  var stls = Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isArray"])(styles) ? _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1___default()(styles) : [styles];
 
   if (stls.length) {
     var href = stls.shift();
@@ -56754,7 +56794,7 @@ var appendStyles = function appendStyles(styles) {
 
 var shallowDiff = function shallowDiff(objOrig, objNew) {
   var result = {};
-  var keysNew = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["keys"])(objNew);
+  var keysNew = Object(underscore__WEBPACK_IMPORTED_MODULE_2__["keys"])(objNew);
 
   for (var prop in objOrig) {
     if (objOrig.hasOwnProperty(prop)) {
@@ -56773,7 +56813,7 @@ var shallowDiff = function shallowDiff(objOrig, objNew) {
 
   for (var _prop in objNew) {
     if (objNew.hasOwnProperty(_prop)) {
-      if (Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isUndefined"])(objOrig[_prop])) {
+      if (Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(objOrig[_prop])) {
         result[_prop] = objNew[_prop];
       }
     }
@@ -56851,7 +56891,7 @@ var hasDnd = function hasDnd(em) {
 
 
 var getElement = function getElement(el) {
-  if (Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isElement"])(el) || isTextNode(el)) {
+  if (Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isElement"])(el) || isTextNode(el)) {
     return el;
   } else if (el && el.getEl) {
     return el.getEl();
@@ -56894,7 +56934,7 @@ var isTaggableNode = function isTaggableNode(el) {
 
 var getModel = function getModel(el, $) {
   var model = el;
-  Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isElement"])(el) && (model = $(el).data('model'));
+  Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isElement"])(el) && (model = $(el).data('model'));
   return model;
 };
 
@@ -56944,6 +56984,10 @@ var getKeyChar = function getKeyChar(ev) {
 
 var isEscKey = function isEscKey(ev) {
   return getKeyCode(ev) === 27;
+};
+
+var isObject = function isObject(val) {
+  return val !== null && !Array.isArray(val) && _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0___default()(val) === 'object';
 };
 
 var capitalize = function capitalize(str) {

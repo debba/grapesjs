@@ -22,11 +22,17 @@ export default Backbone.Collection.extend({
   },
 
   removeChildren(removed, coll, opts = {}) {
+    // Removing a parent component can cause this function
+    // to be called with an already removed child element
+    if (!removed) {
+      return;
+    }
+
     const { domc, em } = this;
     const allByID = domc ? domc.allById() : {};
 
     if (!opts.temporary) {
-      // Remove the component from the gloabl list
+      // Remove the component from the global list
       const id = removed.getId();
       const sels = em.get('SelectorManager').getAll();
       const rules = em.get('CssComposer').getAll();
@@ -121,7 +127,8 @@ export default Backbone.Collection.extend({
     } else if (isArray(models)) {
       models.forEach((item, index) => {
         if (isString(item)) {
-          models[index] = this.parseString(item, opt);
+          const nodes = this.parseString(item, opt);
+          models[index] = isArray(nodes) && !nodes.length ? null : nodes;
         }
       });
     }
